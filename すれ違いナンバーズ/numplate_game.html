@@ -1357,6 +1357,28 @@ async function saveState() {
   },{merge:true});
 }
 
+async function saveBingoState() {
+  await setDoc(
+    doc(db, "users", auth.currentUser.uid),
+    {
+      bingoCard,
+      bingoMarked: [...bingoMarked]
+    },
+    { merge: true }
+  );
+}
+
+async function saveTerritoryState() {
+  await setDoc(
+    doc(db, "users", auth.currentUser.uid),
+    {
+      territoryCounts,
+      currentTeam
+    },
+    { merge: true }
+  );
+}
+
 async function loadUserData() {
   const snap = await getDoc(doc(db, "users", auth.currentUser.uid));
 
@@ -1374,20 +1396,6 @@ async function loadUserData() {
 
   updateUI();
 }
-
-await setDoc(doc(db,"users",auth.currentUser.uid),{
-
-    bingoCard:bingoCard,
-    bingoMarked:[...bingoMarked]
-
-},{merge:true});
-
-await setDoc(doc(db,"users",auth.currentUser.uid),{
-
-    territoryCounts,
-    currentTeam
-
-},{merge:true});
 
 async function googleLogin(){
 
