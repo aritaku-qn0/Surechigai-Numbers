@@ -1359,6 +1359,9 @@ async function saveTerritoryState() {
 }
 
 async function loadUserData() {
+
+  if (!auth.currentUser) return;
+
   const snap = await getDoc(doc(db, "users", auth.currentUser.uid));
 
   if (!snap.exists()) return;
