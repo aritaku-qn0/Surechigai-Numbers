@@ -1173,7 +1173,7 @@ main {
     <input
       type="text"
       id="account-id"
-      placeholder="ID"
+      placeholder="メールアドレス"
       style="
         width:100%;
         padding:10px;
@@ -1201,7 +1201,7 @@ main {
     </div>
 
     <div class="modal-btn-wrap">
-      <button class="btn primary" onclick="googleLogin()">
+      <button id="google-login-btn"class="btn primary"onclick="googleLogin()">
         Googleでログイン
       </button>
     </div>
@@ -2420,15 +2420,32 @@ renderTerritoryScores();
 selectTeam(currentTeam);
 updateUI();
 onAuthStateChanged(auth, async (user) => {
-  if (user) {
-    document.getElementById("accountName").textContent = user.displayName;
-    document.getElementById("accountEmail").textContent = user.email;
-    document.getElementById("accountPhoto").src = user.photoURL;
 
-    document.getElementById("loginBtn").textContent = "ログアウト";
+  const btn = document.getElementById("google-login-btn");
+
+  if (user) {
+
+    document.getElementById("account-name").value =
+      user.displayName || "";
+
+    document.getElementById("account-id").value =
+      user.email || "";
+
+    btn.textContent = "ログアウト";
+    btn.onclick = logout;   // 既存のlogout()を使う
 
     await loadUserData();
+
+  } else {
+
+    document.getElementById("account-name").value = "";
+    document.getElementById("account-id").value = "";
+
+    btn.textContent = "Googleでログイン";
+    btn.onclick = googleLogin;
+
   }
+
 });
 </script>
 <script type="module" src="firebase.js"></script>
