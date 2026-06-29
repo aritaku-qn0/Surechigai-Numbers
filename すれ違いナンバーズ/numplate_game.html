@@ -1219,11 +1219,11 @@ main {
 <script type="module" src="firebase.js"></script>
 <script>
 console.log("HTMLのscript開始");
-function currentUser(){
+function currentUser() {
     return window.auth?.currentUser ?? null;
 }
 
-function isLoggedIn(){
+function isLoggedIn() {
     return currentUser() !== null;
 }
 // ===== DATA =====
@@ -1333,18 +1333,18 @@ let prefInfoCache = {};
 if(!isValidBingoCard(bingoCard)){
   bingoCard = createBingoCard();
   bingoMarked = new Set(['FREE']);
-  saveBingoState();
+  saveState();
 } else {
   bingoMarked.add('FREE');
-  saveBingoState();
+  saveState();
 }
 
 // ===== INIT =====
-async function saveState(){
+async function saveState() {
 
-    const user=currentUser();
+    const user = currentUser();
 
-    if(!user)return;
+    if (!user) return;
 
     await window.setDoc(
 
@@ -1356,13 +1356,13 @@ async function saveState(){
 
         {
 
-            collected:[...collected],
+            collected: [...collected],
 
             logEntries,
 
             bingoCard,
 
-            bingoMarked:[...bingoMarked],
+            bingoMarked: [...bingoMarked],
 
             territoryCounts,
 
@@ -1372,59 +1372,57 @@ async function saveState(){
 
         },
 
-        {merge:true}
+        {
+            merge: true
+        }
 
     );
 
 }
 
-async function loadUserData(){
+async function loadUserData() {
 
-    const user=currentUser();
+    const user = currentUser();
 
-    if(!user)return;
+    if (!user) return;
 
-    const snap=
-    await window.getDoc(
-
+    const snap = await window.getDoc(
         window.doc(
             window.db,
             "users",
             user.uid
         )
-
     );
 
-    if(!snap.exists()){
+    if (!snap.exists()) {
 
         await saveState();
-
         return;
 
     }
 
-    const data=snap.data();
+    const data = snap.data();
 
-    collected=new Set(data.collected||[]);
-    logEntries=data.logEntries||[];
-    bingoCard=data.bingoCard||null;
-    bingoMarked=new Set(data.bingoMarked||[]);
-    territoryCounts=data.territoryCounts||{};
-    currentTeam=data.currentTeam||"a";
-    neighborMissions=data.neighborMissions||[];
+    collected = new Set(data.collected || []);
+    logEntries = data.logEntries || [];
+    bingoCard = data.bingoCard || null;
+    bingoMarked = new Set(data.bingoMarked || []);
+    territoryCounts = data.territoryCounts || {};
+    currentTeam = data.currentTeam || "a";
+    neighborMissions = data.neighborMissions || [];
 
 }
 
-async function googleLogin(){
+async function googleLogin() {
 
-    try{
+    try {
 
         await window.signInWithPopup(
             window.auth,
             window.provider
         );
 
-    }catch(e){
+    } catch (e) {
 
         console.error(e);
 
@@ -1432,7 +1430,7 @@ async function googleLogin(){
 
 }
 
-async function logout(){
+async function logout() {
 
     await window.signOut(window.auth);
 
@@ -1591,7 +1589,7 @@ function teamClass(team) {
 function addTerritoryPoint(prefId, team) {
   if(!territoryCounts[prefId]) territoryCounts[prefId] = {a:0,b:0,c:0,d:0};
   territoryCounts[prefId][team] = (territoryCounts[prefId][team] || 0) + 1;
-  saveTerritoryState();
+  saveState();
   updateTerritoryMapColors();
   renderTerritoryScores();
 }
@@ -1750,7 +1748,7 @@ function showTerritoryDetail(prefId, prefName) {
 
 function selectTeam(team) {
   currentTeam = team;
-  saveTerritoryState();
+  saveState();
   document.querySelectorAll('.team-btn').forEach(btn=>{
     const active = btn.dataset.team === team;
     btn.classList.toggle('active', active);
@@ -2277,7 +2275,7 @@ function resetBingoCard() {
   if(!confirm('ビンゴカードを作り直しますか？')) return;
   bingoCard = createBingoCard();
   bingoMarked = new Set(['FREE']);
-  saveBingoState();
+  saveState();
   renderBingo();
 }
 
@@ -2294,7 +2292,7 @@ function markBingoFromPlate(plateNumber) {
     }
   });
   if(!changed) return;
-  saveBingoState();
+  saveState();
   renderBingo();
   const after = getBingoStats().lineCount;
   if(after > before) showToast('ビンゴ達成！', true);
@@ -2380,23 +2378,32 @@ function openAccountModal(){
         .classList.add("show");
 }
 
-function updateAccountUI(user){
+function updateAccountUI(user) {
 
-    accountName.value=user.displayName||"";
-    accountId.value=user.email||"";
+    document.getElementById("account-name").value =
+        user.displayName || "";
 
-    googleLoginBtn.textContent="ログアウト";
-    googleLoginBtn.onclick=logout;
+    document.getElementById("account-id").value =
+        user.email || "";
+
+    const btn =
+        document.getElementById("google-login-btn");
+
+    btn.textContent = "ログアウト";
+    btn.onclick = logout;
 
 }
 
-function resetAccountUI(){
+function resetAccountUI() {
 
-    accountName.value="";
-    accountId.value="";
+    document.getElementById("account-name").value = "";
+    document.getElementById("account-id").value = "";
 
-    googleLoginBtn.textContent="Googleでログイン";
-    googleLoginBtn.onclick=googleLogin;
+    const btn =
+        document.getElementById("google-login-btn");
+
+    btn.textContent = "Googleでログイン";
+    btn.onclick = googleLogin;
 
 }
 
@@ -2466,28 +2473,25 @@ renderBingo();
 renderTerritoryScores();
 selectTeam(currentTeam);
 updateUI();
-window.addEventListener("load",()=>{
+window.addEventListener("load", () => {
 
-    window.onAuthStateChanged(
-        window.auth,
-        async(user)=>{
+    window.onAuthStateChanged(window.auth, async (user) => {
 
-            if(user){
+        if (user) {
 
-                updateAccountUI(user);
+            updateAccountUI(user);
 
-                await loadUserData();
+            await loadUserData();
 
-                updateUI();
+            updateUI();
 
-            }else{
+        } else {
 
-                resetAccountUI();
-
-            }
+            resetAccountUI();
 
         }
-    );
+
+    });
 
 });
 //onAuthStateChanged(auth, async (user) => {
