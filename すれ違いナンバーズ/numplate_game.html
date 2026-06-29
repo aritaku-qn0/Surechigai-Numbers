@@ -2419,24 +2419,32 @@ renderBingo();
 renderTerritoryScores();
 selectTeam(currentTeam);
 updateUI();
-onAuthStateChanged(auth, async (user) => {
+window.addEventListener("load", () => {
 
-    console.log("認証状態が変わりました");
+    console.log("window load");
 
-    if (user) {
-
-        console.log("ログイン中");
-        console.log("UID:", user.uid);
-        console.log("名前:", user.displayName);
-        console.log("メール:", user.email);
-
-    } else {
-
-        console.log("ログアウトしています");
-
-    }
+    console.log(window.auth);
+    console.log(window.onAuthStateChanged);
 
 });
+//onAuthStateChanged(auth, async (user) => {
+
+    //console.log("認証状態が変わりました");
+
+    //if (user) {
+
+        //console.log("ログイン中");
+        //console.log("UID:", user.uid);
+        //console.log("名前:", user.displayName);
+        //console.log("メール:", user.email);
+
+    //} else {
+
+        //console.log("ログアウトしています");
+
+    //}
+
+//});
 </script>
 <script type="module" src="firebase.js"></script>
 </body>
