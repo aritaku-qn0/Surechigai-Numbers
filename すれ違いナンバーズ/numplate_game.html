@@ -1216,7 +1216,28 @@ main {
 <script src="pref_spots.js"></script>
 <script src="pref_food.js"></script>
 <script src="pref_neighbors.js"></script>
-<script>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+  import { getAuth } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
+  import {
+    getFirestore,
+    doc,
+    getDoc,
+    setDoc
+  } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDDHkY0j2G0jGyimRTrUr3CpArDHc5hQ98",
+    authDomain: "surechigai-numbers.firebaseapp.com",
+    projectId: "surechigai-numbers",
+    storageBucket: "surechigai-numbers.firebasestorage.app",
+    messagingSenderId: "1049904814367",
+    appId: "1:1049904814367:web:54203af0eff830c4a9382a"
+  };
+  
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
 // ===== DATA =====
 const PREFS = [
   {id:"01",name:"北海道"},{id:"02",name:"青森"},{id:"03",name:"岩手"},{id:"04",name:"宮城"},{id:"05",name:"秋田"},
@@ -1318,20 +1339,28 @@ if(!isValidBingoCard(bingoCard)){
 }
 
 // ===== INIT =====
-function saveState() {
-  localStorage.setItem('nb_collected', JSON.stringify([...collected]));
-  localStorage.setItem('nb_log', JSON.stringify(logEntries.slice(0,50)));
+async function saveState() {
+  await setDoc(doc(db,"users",auth.currentUser.uid),{
+
+      collected:[...collected],
+      logEntries:logEntries,
+
+  },{merge:true});
 }
 
-function saveBingoState() {
-  localStorage.setItem('nb_bingo_card', JSON.stringify(bingoCard));
-  localStorage.setItem('nb_bingo_marked', JSON.stringify([...bingoMarked]));
-}
+await setDoc(doc(db,"users",auth.currentUser.uid),{
 
-function saveTerritoryState() {
-  localStorage.setItem('nb_territory_counts', JSON.stringify(territoryCounts));
-  localStorage.setItem('nb_current_team', currentTeam);
-}
+    bingoCard:bingoCard,
+    bingoMarked:[...bingoMarked]
+
+},{merge:true});
+
+await setDoc(doc(db,"users",auth.currentUser.uid),{
+
+    territoryCounts,
+    currentTeam
+
+},{merge:true});
 
 function updateUI() {
   const n = collected.size;
@@ -1990,10 +2019,9 @@ function createNeighborMissions(prefName){
 
   neighborMissions.unshift(mission);
 
-  localStorage.setItem(
-    'nb_neighbor_mission',
-    JSON.stringify(neighborMissions)
-  );
+  setDoc(doc(db,"users",auth.currentUser.uid),{
+    neighborMissions
+  },{merge:true});
 
   return mission;
 }
