@@ -2421,6 +2421,8 @@ selectTeam(currentTeam);
 updateUI();
 onAuthStateChanged(auth, async (user) => {
 
+  console.log("onAuthStateChanged", user);
+
   const btn = document.getElementById("google-login-btn");
 
   if (user) {
