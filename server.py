@@ -214,7 +214,7 @@ def analyze():
     
     plate_number = extract_plate_number(text)
 
-    print("OCR結果:", repr(text), flush=True)
+    print("OCR結果:", (text), flush=True)
     print("読み取り番号:", plate_number, flush=True)
     print(result, flush=True)
 
