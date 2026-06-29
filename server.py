@@ -9,7 +9,7 @@ import re
 app = Flask(__name__)
 CORS(app)
 
-reader = easyocr.Reader(['ja', 'en'])
+reader = None
 
 
 def normalize_ocr_text(text):
@@ -177,6 +177,10 @@ PREF_MAP = {
 }
 @app.route("/analyze", methods=["POST"])
 def analyze():
+
+    global reader
+    if reader is None:
+        reader = easyocr.Reader(['ja', 'en'])
 
     data = request.json
 
