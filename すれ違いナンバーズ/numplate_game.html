@@ -2331,11 +2331,23 @@ let selectedAvatar = "😀";
 
 function openAccountModal(){
 
-  document.getElementById('account-name').value =
-    localStorage.getItem('nb_name') || '';
+  if (auth.currentUser) {
 
-  document.getElementById('account-id').value =
-    localStorage.getItem('nb_id') || '';
+    document.getElementById('account-name').value =
+      auth.currentUser.displayName || '';
+
+    document.getElementById('account-id').value =
+      auth.currentUser.email || '';
+
+  } else {
+
+    document.getElementById('account-name').value =
+      localStorage.getItem('nb_name') || '';
+
+    document.getElementById('account-id').value =
+      localStorage.getItem('nb_id') || '';
+
+  }
 
   document.getElementById('account-modal')
     .classList.add('show');
@@ -2407,12 +2419,17 @@ renderBingo();
 renderTerritoryScores();
 selectTeam(currentTeam);
 updateUI();
-onAuthStateChanged(auth, async(user)=>{
-  if(user){
-    console.log(user.displayName);
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    document.getElementById("accountName").textContent = user.displayName;
+    document.getElementById("accountEmail").textContent = user.email;
+    document.getElementById("accountPhoto").src = user.photoURL;
+
+    document.getElementById("loginBtn").textContent = "ログアウト";
+
     await loadUserData();
   }
-})
+});
 </script>
 <script type="module" src="firebase.js"></script>
 </body>
