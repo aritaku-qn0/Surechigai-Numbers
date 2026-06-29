@@ -1,0 +1,2348 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ご当地集め!すれ違いナンバーズ ～旅をコレクションするドライブゲーム～ </title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700;900&family=Zen+Kaku+Gothic+New:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+:root {
+  --ink: #1a1208;
+  --ink2: #3d2e14;
+  --paper: #f5f0e8;
+  --paper2: #ede6d6;
+  --accent: #c0392b;
+  --accent2: #e67e22;
+  --gold: #b8860b;
+  --green: #2d6a4f;
+  --green2: #52b788;
+  --muted: #8a7a60;
+  --border: rgba(26,18,8,0.15);
+  --shadow: 0 4px 24px rgba(26,18,8,0.12);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; scroll-behavior: smooth; }
+body {
+  font-family: 'Zen Kaku Gothic New', sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* BACKGROUND TEXTURE */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(26,18,8,0.04) 39px, rgba(26,18,8,0.04) 40px),
+    repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(26,18,8,0.04) 39px, rgba(26,18,8,0.04) 40px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* HEADER */
+header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--ink);
+  color: var(--paper);
+  padding: 0 2rem;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 3px solid var(--accent);
+}
+.logo {
+  font-family: 'Noto Serif JP', serif;
+  font-weight: 900;
+  font-size: 1.25rem;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.logo-icon { color: var(--accent); font-size: 1.4rem; }
+.header-stats {
+  display: flex;
+  gap: 1.5rem;
+  font-size: 0.8rem;
+  color: rgba(245,240,232,0.7);
+}
+
+.header-stat span {
+  color: var(--paper);
+  font-size: 1rem;
+  font-weight: 700;
+  font-family: 'Noto Serif JP', serif;
+}
+
+.header-stat strong {
+  color: rgba(245,240,232,0.6);
+  font-size: 0.75rem;
+  font-family: 'Noto Serif JP', serif;
+}
+
+/* MAIN LAYOUT */
+main {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  grid-template-rows: auto 1fr;
+  gap: 0;
+  min-height: calc(100vh - 60px);
+}
+
+/* LEFT PANEL — MAP */
+.map-panel {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.map-title-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.map-title-bar h2 {
+  font-family: 'Noto Serif JP', serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--ink2);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.collected-badge {
+  background: var(--ink);
+  color: var(--paper);
+  font-size: 0.75rem;
+  padding: 3px 10px;
+  border-radius: 99px;
+  font-family: 'Noto Serif JP', serif;
+}
+
+.map-wrapper {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  aspect-ratio: 5/6;
+  position: relative;
+}
+#japan-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.pref-path {
+  fill: var(--paper2);
+  stroke: white;
+  stroke-width: 0.6;
+  cursor: pointer;
+  transition: fill 0.4s ease, opacity 0.2s;
+}
+.pref-path:hover,
+.territory-path:hover { opacity: 0.75; }
+.pref-path.collected { fill: var(--green2); }
+.territory-path {
+  stroke: white;
+  stroke-width: 0.6;
+  cursor: pointer;
+  transition: fill 0.4s ease, opacity 0.2s;
+}
+.territory-path.team-a { fill: #e85d75; }
+.territory-path.team-b { fill: #3a86ff; }
+.territory-path.team-c { fill: #2fb344; }
+.territory-path.team-d { fill: #f59f00; }
+.territory-path.neutral { fill: var(--paper2); }
+.pref-path.flash {
+  animation: mapFlash 0.7s ease-out forwards;
+}
+@keyframes mapFlash {
+  0% { fill: #fff; }
+  40% { fill: var(--accent2); }
+  100% { fill: var(--green2); }
+}
+
+.map-legend {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+.legend-item { display: flex; align-items: center; gap: 5px; }
+.legend-dot { width: 12px; height: 12px; border-radius: 3px; }
+
+/* RIGHT PANEL */
+.right-panel {
+  background: var(--paper2);
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 60px);
+  position: sticky;
+  top: 60px;
+  overflow-y: hidden;
+}
+
+/* TABS */
+.tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+  background: var(--ink);
+}
+.tab-btn {
+  flex: 1;
+  padding: 12px 8px;
+  background: none;
+  border: none;
+  color: rgba(245,240,232,0.5);
+  font-family: 'Zen Kaku Gothic New', sans-serif;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border-bottom: 2px solid transparent;
+}
+.tab-btn:hover { color: var(--paper); }
+.tab-btn.active {
+  color: var(--paper);
+  border-bottom-color: var(--accent);
+}
+
+.tab-content {
+  display: none;
+  flex-direction: column;
+  flex: 1;
+
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.tab-content.active {
+  display: flex;
+}
+
+/* CAMERA TAB */
+.camera-section {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.section-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.video-frame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4/3;
+  background: var(--ink);
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+#video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: none;
+}
+#canvas { display: none; }
+.cam-idle {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+.cam-idle i { font-size: 2.5rem; color: rgba(138,122,96,0.5); }
+
+/* scanning overlay */
+.scan-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  display: none;
+}
+.scan-line {
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent2), var(--accent), var(--accent2), transparent);
+  top: 0;
+  animation: scanMove 1.5s ease-in-out infinite;
+  box-shadow: 0 0 8px var(--accent);
+}
+@keyframes scanMove {
+  0% { top: 10%; }
+  50% { top: 85%; }
+  100% { top: 10%; }
+}
+.scan-corner {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-color: var(--accent);
+  border-style: solid;
+}
+.scan-corner.tl { top: 10%; left: 10%; border-width: 2px 0 0 2px; }
+.scan-corner.tr { top: 10%; right: 10%; border-width: 2px 2px 0 0; }
+.scan-corner.bl { bottom: 10%; left: 10%; border-width: 0 0 2px 2px; }
+.scan-corner.br { bottom: 10%; right: 10%; border-width: 0 2px 2px 0; }
+
+.btn-row { display: flex; gap: 8px; }
+.btn {
+  flex: 1;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1.5px solid var(--border);
+  background: white;
+  color: var(--ink);
+  font-family: 'Zen Kaku Gothic New', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.btn:hover { background: var(--paper); border-color: var(--ink2); }
+.btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.btn.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+}
+.btn.primary:hover { background: #a93226; }
+
+/* RESULT */
+.result-box {
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 0.85rem;
+  display: none;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+}
+.result-box.show { display: flex; }
+.result-box.success { background: #d8f3dc; color: var(--green); border: 1px solid #b7e4c7; }
+.result-box.already { background: #fff3cd; color: #856404; border: 1px solid #ffc107; }
+.result-box.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+
+.analyzing-box {
+  display: none;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--paper);
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+.analyzing-box.show { display: flex; }
+.dots span { animation: dotPulse 1.2s infinite; }
+.dots span:nth-child(2) { animation-delay: 0.2s; }
+.dots span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes dotPulse { 0%,80%,100%{opacity:0.2} 40%{opacity:1} }
+
+/* PREFECTURE INFO */
+.pref-info-section {
+  padding: 1rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.pref-info-card {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.pref-info-header {
+  background: var(--ink);
+  color: var(--paper);
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.pref-info-name {
+  font-family: 'Noto Serif JP', serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+.pref-info-body {
+  padding: 12px 14px;
+}
+.spots-loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 0.82rem;
+  padding: 8px 0;
+}
+.spot-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.spot-item {
+  border-left: 3px solid var(--green2);
+  padding-left: 10px;
+}
+.spot-name { font-weight: 700; font-size: 0.88rem; }
+.spot-desc { font-size: 0.78rem; color: var(--muted); margin-top: 2px; line-height: 1.5; }
+
+.pref-empty {
+  text-align: center;
+  padding: 2rem 1rem;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+.pref-empty i { font-size: 2rem; display: block; margin-bottom: 8px; opacity: 0.4; }
+
+/* MISSIONS TAB */
+.missions-section {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.mission-card {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  transition: box-shadow 0.2s;
+}
+.mission-card:hover { box-shadow: 0 2px 12px rgba(26,18,8,0.1); }
+.mission-card.completed { border-color: var(--gold); }
+.mission-header {
+  padding: 10px 14px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+}
+.mission-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: var(--paper2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+.mission-card.completed .mission-icon {
+  background: #fff3cd;
+}
+.mission-info { flex: 1; }
+.mission-name {
+  font-weight: 700;
+  font-size: 0.88rem;
+  line-height: 1.3;
+}
+.mission-desc {
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-top: 2px;
+}
+.mission-badge {
+  font-size: 0.7rem;
+  padding: 2px 8px;
+  border-radius: 99px;
+  white-space: nowrap;
+  align-self: flex-start;
+  margin-top: 2px;
+}
+.mission-badge.done { background: #fff3cd; color: #856404; }
+.mission-badge.prog { background: var(--paper2); color: var(--muted); }
+.mission-progress-bar {
+  height: 4px;
+  background: var(--paper2);
+  margin: 0 14px 10px;
+  border-radius: 2px;
+  overflow: hidden;
+}
+.mission-progress-fill {
+  height: 100%;
+  background: var(--green2);
+  border-radius: 2px;
+  transition: width 0.5s ease;
+}
+.mission-card.completed .mission-progress-fill { background: var(--gold); }
+.mission-prefs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 0 14px 10px;
+}
+.mission-pref-tag {
+  font-size: 0.7rem;
+  padding: 2px 7px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  color: var(--muted);
+}
+.mission-pref-tag.done { background: #d8f3dc; color: var(--green); border-color: #b7e4c7; }
+
+/* LOG */
+.log-section {
+  padding: 1rem;
+  flex: 1;
+  overflow-y: auto;
+}
+.log-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.8rem;
+}
+.log-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--green2); flex-shrink: 0;
+}
+.log-dot.old { background: var(--muted); opacity: 0.4; }
+.log-time { color: var(--muted); font-size: 0.72rem; margin-left: auto; }
+
+/* TOAST */
+.toast-container {
+  position: fixed;
+  top: 70px;
+  right: 1rem;
+  z-index: 999;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+}
+.toast {
+  background: var(--ink);
+  color: var(--paper);
+  border-radius: 10px;
+  padding: 12px 16px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  animation: toastIn 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards;
+  max-width: 300px;
+  border-left: 4px solid var(--accent2);
+}
+.toast.mission-complete { border-left-color: var(--gold); }
+@keyframes toastIn {
+  from { transform: translateX(120%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+@keyframes toastOut {
+  from { transform: translateX(0); opacity: 1; }
+  to { transform: translateX(120%); opacity: 0; }
+}
+.toast.fade-out { animation: toastOut 0.3s ease forwards; }
+.toast-icon { font-size: 1.2rem; }
+
+/* MAP TOOLTIP */
+#map-tooltip {
+  position: fixed;
+  background: var(--ink);
+  color: var(--paper);
+  font-size: 0.75rem;
+  padding: 4px 10px;
+  border-radius: 6px;
+  pointer-events: none;
+  display: none;
+  z-index: 200;
+  font-family: 'Noto Serif JP', serif;
+  white-space: nowrap;
+  border-left: 3px solid var(--green2);
+}
+#map-tooltip.uncollected { border-left-color: var(--muted); }
+
+/* PROGRESS RING */
+.progress-ring-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+.ring-svg { flex-shrink: 0; }
+.ring-bg { fill: none; stroke: var(--paper2); stroke-width: 6; }
+.ring-fill { fill: none; stroke: var(--green2); stroke-width: 6; stroke-linecap: round; transition: stroke-dashoffset 0.6s ease; transform: rotate(-90deg); transform-origin: center; }
+.ring-info h3 { font-family: 'Noto Serif JP', serif; font-size: 1.4rem; font-weight: 900; color: var(--ink); }
+.ring-info p { font-size: 0.75rem; color: var(--muted); }
+
+/* SCROLLBAR */
+.right-panel::-webkit-scrollbar { width: 4px; }
+.right-panel::-webkit-scrollbar-track { background: transparent; }
+.right-panel::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+.logo {
+  cursor: pointer;
+  user-select: none;
+}
+
+/* ヘッダーメニュー */
+.header-menu {
+  position: fixed;
+  top: 65px;
+  left: 15px;
+  width: 220px;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  display: none;
+  overflow: hidden;
+  z-index: 1000;
+}
+
+.header-menu.show {
+  display: block;
+}
+
+.menu-item {
+  padding: 14px 16px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.menu-item:last-child {
+  border-bottom: none;
+}
+
+.menu-item:hover {
+  background: var(--paper);
+}
+
+/* モーダル */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
+
+.modal-overlay.show {
+  display: flex;
+}
+
+.modal-box {
+  width: min(90%, 360px);
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+}
+
+.modal-icon {
+  font-size: 56px;
+  margin-bottom: 10px;
+}
+
+.modal-box h2 {
+  margin-bottom: 10px;
+}
+
+.modal-box p {
+  color: var(--muted);
+  margin-bottom: 20px;
+}
+
+.modal-btn-wrap {
+  display: flex;
+  justify-content: center;
+}
+
+.modal-btn-wrap .btn {
+  flex: none;
+  width: 120px;
+}
+
+.team-select {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.team-btn {
+  border: 1.5px solid var(--border);
+  background: white;
+  border-radius: 8px;
+  padding: 8px 4px;
+  font-weight: 900;
+  cursor: pointer;
+  color: var(--ink);
+}
+
+.team-btn.active {
+  color: white;
+  border-color: transparent;
+}
+
+.team-a-bg { background: #e85d75 !important; }
+.team-b-bg { background: #3a86ff !important; }
+.team-c-bg { background: #2fb344 !important; }
+.team-d-bg { background: #f59f00 !important; }
+
+.page-view {
+  display: none;
+}
+
+.page-view.active {
+  display: block;
+}
+
+#main-page.active {
+  display: grid;
+}
+
+#territory-page {
+  min-height: calc(100vh - 60px);
+  padding: 1.25rem;
+}
+
+.territory-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 1rem;
+  align-items: start;
+}
+
+.territory-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 1rem;
+}
+
+.territory-header h1 {
+  font-family: 'Noto Serif JP', serif;
+  font-size: 1.35rem;
+  color: var(--ink);
+}
+
+.territory-map-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.territory-legend {
+  flex-wrap: wrap;
+}
+
+.territory-panel {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px;
+  box-shadow: var(--shadow);
+}
+
+.territory-team-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+  padding: 10px 0;
+  font-size: 0.88rem;
+}
+
+.territory-team-row:last-child { border-bottom: none; }
+.territory-dot { width: 12px; height: 12px; border-radius: 3px; display: inline-block; margin-right: 8px; }
+.territory-detail { margin-top: 12px; font-size: 0.82rem; color: var(--muted); line-height: 1.6; }
+
+@media (max-width: 900px) {
+  .territory-layout { grid-template-columns: 1fr; }
+  #territory-page { padding: 1rem; }
+}
+
+.bingo-modal-box {
+  width: min(94%, 430px);
+  text-align: left;
+}
+
+.bingo-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.bingo-title h2 {
+  margin: 0 0 4px;
+  font-family: 'Noto Serif JP', serif;
+  color: var(--ink);
+}
+
+.bingo-title p {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.bingo-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+  margin: 14px 0;
+}
+
+.bingo-cell {
+  aspect-ratio: 1;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  background: var(--paper2);
+  color: var(--ink);
+  font-weight: 900;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.bingo-cell.marked {
+  background: var(--green2);
+  border-color: var(--green);
+  color: white;
+}
+
+.bingo-cell.free {
+  background: var(--gold);
+  border-color: #d49b00;
+  color: var(--ink);
+  font-size: 0.78rem;
+  letter-spacing: 0;
+}
+
+.bingo-cell.marked::after {
+  content: '✓';
+  position: absolute;
+  right: 5px;
+  bottom: 2px;
+  font-size: 0.75rem;
+}
+
+.bingo-status {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.bingo-stat {
+  background: var(--paper2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px;
+  text-align: center;
+}
+
+.bingo-stat strong {
+  display: block;
+  font-size: 1.1rem;
+  color: var(--ink);
+}
+
+.bingo-stat span {
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.bingo-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.avatar-option{
+  font-size:32px;
+  cursor:pointer;
+  padding:5px;
+  border-radius:10px;
+}
+
+.avatar-option.selected{
+  background:#d8f3dc;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<header>
+  <div class="logo" onclick="toggleMenu()">
+    <i class="ti ti-map logo-icon"></i>
+    すれ違いナンバーズ
+    <i class="ti ti-chevron-down"></i>
+  </div>
+  <div class="header-stats">
+    <div class="header-stat"><span id="hdr-count">0</span>/<strong>47</strong> 都道府県</div>
+    <div class="header-stat">ミッション <span id="hdr-missions">0</span>/<strong id="hdr-missions-total">0</strong> 達成</div>
+  </div>
+</header>
+
+<div class="header-menu" id="header-menu">
+  <div class="menu-item" onclick="openAccountModal()">
+    <i class="ti ti-user"></i> アカウント設定
+  </div>
+
+  <div class="menu-item" onclick="showComingSoon('フレンドリスト')">
+    <i class="ti ti-users"></i> フレンドリスト
+  </div>
+
+  <div class="menu-item" onclick="showComingSoon('ランキング')">
+    <i class="ti ti-trophy"></i> ランキング
+  </div>
+
+  <div class="menu-item" onclick="openBingoModal()">
+    <i class="ti ti-grid-dots"></i> ビンゴ
+  </div>
+
+  <div class="menu-item" onclick="openTerritoryPage()">
+    <i class="ti ti-flag"></i> 陣取りゲーム
+  </div>
+
+</div>
+
+<main id="main-page" class="page-view active">
+  <!-- LEFT: MAP -->
+  <div class="map-panel">
+    <div class="map-title-bar">
+      <h2><i class="ti ti-map-2"></i> 全国制覇マップ</h2>
+      <span class="collected-badge" id="collected-label">0 / 47</span>
+    </div>
+    <div class="map-wrapper">
+      <svg id="japan-svg" viewBox="0 0 500 560" xmlns="http://www.w3.org/2000/svg"></svg>
+    </div>
+    <div class="map-legend">
+      <div class="legend-item">
+        <div class="legend-dot" style="background:var(--green2)"></div>
+        <span>制覇済み</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot" style="background:var(--paper2); border:1px solid var(--border)"></div>
+        <span>未制覇</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: PANEL -->
+  <div class="right-panel">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('camera',this)">
+        <i class="ti ti-camera"></i> 撮影
+      </button>
+      <button class="tab-btn" onclick="switchTab('info',this)">
+        <i class="ti ti-map-pin"></i> 県情報
+      </button>
+      <button class="tab-btn" onclick="switchTab('missions',this)">
+        <i class="ti ti-trophy"></i> ミッション
+      </button>
+      <button class="tab-btn" onclick="switchTab('log',this)">
+        <i class="ti ti-list"></i> 記録
+      </button>
+    </div>
+
+    <!-- CAMERA TAB -->
+    <div class="tab-content active" id="tab-camera">
+      <div class="camera-section">
+        <div class="section-label">チーム(チームはランダムで選ばれます)</div>
+        <div class="team-select" id="team-select"></div>
+        <div class="section-label">ナンバープレートを撮影</div>
+        <div class="video-frame">
+          <video id="video" autoplay playsinline></video>
+          <canvas id="canvas"></canvas>
+          <div class="cam-idle" id="cam-idle">
+            <i class="ti ti-camera-off"></i>
+            <span>カメラを起動してください</span>
+          </div>
+          <div class="scan-overlay" id="scan-overlay">
+            <div class="scan-line"></div>
+            <div class="scan-corner tl"></div>
+            <div class="scan-corner tr"></div>
+            <div class="scan-corner bl"></div>
+            <div class="scan-corner br"></div>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn" id="btn-camera" onclick="startCamera()">
+            <i class="ti ti-camera"></i> カメラ起動
+          </button>
+          <button class="btn primary" id="btn-capture" onclick="captureAndAnalyze()" disabled>
+            <i class="ti ti-aperture"></i> 撮影・認識
+          </button>
+        </div>
+        <div class="analyzing-box" id="analyzing-box">
+          <i class="ti ti-loader" style="animation:spin 1s linear infinite"></i>
+          AIがナンバープレートを解析中<span class="dots"><span>.</span><span>.</span><span>.</span></span>
+        </div>
+        <div class="result-box" id="result-box"></div>
+
+        <!-- PROGRESS -->
+        <div class="section-label" style="margin-top:4px">全国制覇進捗</div>
+        <div class="progress-ring-wrap">
+          <svg class="ring-svg" width="64" height="64" viewBox="0 0 64 64">
+            <circle class="ring-bg" cx="32" cy="32" r="26"/>
+            <circle class="ring-fill" id="ring-fill" cx="32" cy="32" r="26"
+              stroke-dasharray="163.4" stroke-dashoffset="163.4"/>
+          </svg>
+          <div class="ring-info">
+            <h3><span id="ring-count">0</span>/47</h3>
+            <p>都道府県を制覇！</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- INFO TAB -->
+    <div class="tab-content" id="tab-info">
+      <div class="pref-info-section">
+        <div class="section-label">制覇した県の情報</div>
+        <div id="pref-info-content">
+          <div class="pref-empty">
+            <i class="ti ti-map-pin-off"></i>
+            地図の県をクリックするか<br>ナンバーを認識すると<br>おすすめスポットが表示されます
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MISSIONS TAB -->
+    <div class="tab-content" id="tab-missions">
+      <div id="neighbor-missions"></div>
+      <div class="missions-section" id="missions-list"></div>
+    </div>
+
+    <!-- LOG TAB -->
+    <div class="tab-content" id="tab-log">
+      <div class="log-section" id="log-list">
+        <div style="color:var(--muted);font-size:0.82rem;padding:1rem 0;text-align:center">まだ記録がありません</div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<section id="territory-page" class="page-view">
+  <div class="territory-header">
+    <h1><i class="ti ti-flag"></i> 陣取りゲーム</h1>
+    <button class="btn" style="flex:none;width:auto" onclick="openMainPage()">
+      <i class="ti ti-arrow-left"></i> 戻る
+    </button>
+  </div>
+  <div class="territory-layout">
+    <div class="territory-map-panel">
+      <div class="map-title-bar">
+        <h2><i class="ti ti-map-2"></i> 陣取りマップ</h2>
+        <span class="collected-badge" id="territory-owner-label">0 / 47</span>
+      </div>
+      <div class="map-wrapper">
+        <svg id="territory-svg" viewBox="0 0 500 560" xmlns="http://www.w3.org/2000/svg"></svg>
+      </div>
+      <div class="map-legend territory-legend">
+        <div class="legend-item"><div class="legend-dot team-a-bg"></div><span>A</span></div>
+        <div class="legend-item"><div class="legend-dot team-b-bg"></div><span>B</span></div>
+        <div class="legend-item"><div class="legend-dot team-c-bg"></div><span>C</span></div>
+        <div class="legend-item"><div class="legend-dot team-d-bg"></div><span>D</span></div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--paper2); border:1px solid var(--border)"></div><span>未占領</span></div>
+      </div>
+    </div>
+    <div class="territory-panel">
+      <div class="section-label">チーム別占領数</div>
+      <div id="territory-score-list"></div>
+      <div class="territory-detail" id="territory-detail">
+        県をタップするとチーム別の読み取り数が表示されます。
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="toast-container" id="toast-container"></div>
+<div id="map-tooltip"></div>
+
+<div class="modal-overlay" id="coming-soon-modal">
+  <div class="modal-box">
+    <div class="modal-icon">🙇</div>
+    <h2>申し訳ございません</h2>
+    <p id="modal-text">現在準備中です</p>
+
+    <div class="modal-btn-wrap">
+      <button class="btn primary" onclick="closeModal()">
+        OK
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="bingo-modal">
+  <div class="modal-box bingo-modal-box">
+    <div class="bingo-head">
+      <div class="bingo-title">
+        <h2><i class="ti ti-grid-dots"></i> ナンバービンゴ</h2>
+        <p>読み取った番号の左2桁・右2桁でマスが開きます</p>
+      </div>
+      <button class="btn" style="flex:none;width:44px;padding:10px" onclick="closeBingoModal()">
+        <i class="ti ti-x"></i>
+      </button>
+    </div>
+
+    <div class="bingo-status">
+      <div class="bingo-stat"><strong id="bingo-marked-count">0</strong><span>マーク</span></div>
+      <div class="bingo-stat"><strong id="bingo-reach-count">0</strong><span>リーチ</span></div>
+      <div class="bingo-stat"><strong id="bingo-line-count">0</strong><span>ビンゴ</span></div>
+    </div>
+
+    <div class="bingo-grid" id="bingo-grid"></div>
+
+    <div class="bingo-actions">
+      <button class="btn" onclick="resetBingoCard()">
+        <i class="ti ti-refresh"></i> 作り直し
+      </button>
+      <button class="btn primary" onclick="closeBingoModal()">
+        OK
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="account-modal">
+  <div class="modal-box">
+    <div class="modal-icon">👤</div>
+
+    <h2>アカウント設定</h2>
+
+    <input
+      type="text"
+      id="account-name"
+      placeholder="名前"
+      style="
+        width:100%;
+        padding:10px;
+        margin:10px 0;
+        border-radius:8px;
+        border:1px solid #ccc;
+      "
+    >
+
+    <input
+      type="text"
+      id="account-id"
+      placeholder="ID"
+      style="
+        width:100%;
+        padding:10px;
+        margin:10px 0;
+        border-radius:8px;
+        border:1px solid #ccc;
+      "
+    >
+
+    <div style="margin:15px 0;">
+      <div>アイコン</div>
+
+      <div style="
+        display:flex;
+        gap:10px;
+        justify-content:center;
+        margin-top:10px;
+      ">
+        <span onclick="selectAvatar(this)" class="avatar-option">😀</span>
+        <span onclick="selectAvatar(this)" class="avatar-option">😎</span>
+        <span onclick="selectAvatar(this)" class="avatar-option">🤠</span>
+        <span onclick="selectAvatar(this)" class="avatar-option">👧</span>
+        <span onclick="selectAvatar(this)" class="avatar-option">🧑</span>
+      </div>
+    </div>
+
+    <div class="modal-btn-wrap">
+      <button class="btn primary" onclick="saveAccount()">
+        保存
+      </button>
+    </div>
+  </div>
+</div>
+
+<style>
+@keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+</style>
+
+<script src="pref_map.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
+<script src="pref_spots.js"></script>
+<script src="pref_food.js"></script>
+<script src="pref_neighbors.js"></script>
+<script>
+// ===== DATA =====
+const PREFS = [
+  {id:"01",name:"北海道"},{id:"02",name:"青森"},{id:"03",name:"岩手"},{id:"04",name:"宮城"},{id:"05",name:"秋田"},
+  {id:"06",name:"山形"},{id:"07",name:"福島"},{id:"08",name:"茨城"},{id:"09",name:"栃木"},{id:"10",name:"群馬"},
+  {id:"11",name:"埼玉"},{id:"12",name:"千葉"},{id:"13",name:"東京"},{id:"14",name:"神奈川"},{id:"15",name:"新潟"},
+  {id:"16",name:"富山"},{id:"17",name:"石川"},{id:"18",name:"福井"},{id:"19",name:"山梨"},{id:"20",name:"長野"},
+  {id:"21",name:"岐阜"},{id:"22",name:"静岡"},{id:"23",name:"愛知"},{id:"24",name:"三重"},{id:"25",name:"滋賀"},
+  {id:"26",name:"京都"},{ id:"27",name:"大阪"},{id:"28",name:"兵庫"},{id:"29",name:"奈良"},{id:"30",name:"和歌山"},
+  {id:"31",name:"鳥取"},{id:"32",name:"島根"},{id:"33",name:"岡山"},{id:"34",name:"広島"},{id:"35",name:"山口"},
+  {id:"36",name:"徳島"},{id:"37",name:"香川"},{id:"38",name:"愛媛"},{id:"39",name:"高知"},{id:"40",name:"福岡"},
+  {id:"41",name:"佐賀"},{id:"42",name:"長崎"},{id:"43",name:"熊本"},{id:"44",name:"大分"},{id:"45",name:"宮崎"},
+  {id:"46",name:"鹿児島"},{id:"47",name:"沖縄"}
+];
+
+const MISSIONS = [
+  {
+    id:"hokkaido",name:"北海道地方制覇",icon:"🐻",
+    desc:"果てしなく広がる大地",
+    prefs:["01"],reward:"北海道マスター"
+  },
+  {
+    id:"tohoku",name:"東北地方制覇",icon:"⛩️",
+    desc:"豊かな自然と伝統文化",
+    prefs:["02","03","04","05","06","07"],reward:"東北マスター"
+  },
+  {
+    id:"kanto",name:"関東地方制覇",icon:"🗼",
+    desc:"日本最大の都市圏",
+    prefs:["08","09","10","11","12","13","14"],reward:"関東マスター"
+  },
+  {
+    id:"chubu",name:"中部地方制覇",icon:"⛰️",
+    desc:"雪国とアルプスの魅力",
+    prefs:["15","16","17","18","19","20","21","22","23",],reward:"中部マスター"
+  },
+  {
+    id:"kansai",name:"関西地方制覇",icon:"🏯",
+    desc:"歴史的なお笑いの聖地",
+    prefs:["24","25","26","27","28","29","30"],reward:"関西マスター"
+  },
+  {
+    id:"chugoku",name:"中国地方制覇",icon:"🌊",
+    desc:"自然と多くの世界遺産",
+    prefs:["31","32","33","34","35"],reward:"中国マスター"
+  },
+  {
+    id:"shikoku",name:"四国地方制覇",icon:"🍊",
+    desc:"うどんやミカンなどの有名な産地",
+    prefs:["36","37","38","39"],reward:"四国マスター"
+  },
+  {
+    id:"kyushu",name:"九州地方制覇",icon:"🌋",
+    desc:"活気と自然の共存",
+    prefs:["40","41","42","43","44","45","46"],reward:"九州マスター"
+  },
+  {
+    id:"okinawa",name:"沖縄地方制覇",icon:"🌴",
+    desc:"南国の風が吹く島々",
+    prefs:["47"],reward:"沖縄マスター"
+  },
+  {
+    id:"all",name:"全国制覇",icon:"🏆",
+    desc:"日本全国47都道府県すべてを制覇！",
+    prefs:PREFS.map(p=>p.id),reward:"伝説の旅人"
+  }
+];
+
+let neighborMissions =
+JSON.parse(
+  localStorage.getItem('nb_neighbor_mission')
+) ||[];
+if(!Array.isArray(neighborMissions)){
+  neighborMissions = [];
+}
+
+// ===== STATE =====
+let collected = new Set(JSON.parse(localStorage.getItem('nb_collected')||'[]'));
+let logEntries = JSON.parse(localStorage.getItem('nb_log')||'[]');
+let bingoCard = JSON.parse(localStorage.getItem('nb_bingo_card')||'null');
+let bingoMarked = new Set(JSON.parse(localStorage.getItem('nb_bingo_marked')||'[]'));
+let territoryCounts = JSON.parse(localStorage.getItem('nb_territory_counts')||'{}');
+let currentTeam = localStorage.getItem('nb_current_team');
+if(!currentTeam){
+  const teams = ['a','b','c','d'];
+  currentTeam = teams[Math.floor(Math.random()*teams.length)];
+  localStorage.setItem('nb_current_team', currentTeam);
+}
+let mapGeo = null;
+let stream = null;
+let prefInfoCache = {};
+
+if(!isValidBingoCard(bingoCard)){
+  bingoCard = createBingoCard();
+  bingoMarked = new Set(['FREE']);
+  saveBingoState();
+} else {
+  bingoMarked.add('FREE');
+  saveBingoState();
+}
+
+// ===== INIT =====
+function saveState() {
+  localStorage.setItem('nb_collected', JSON.stringify([...collected]));
+  localStorage.setItem('nb_log', JSON.stringify(logEntries.slice(0,50)));
+}
+
+function saveBingoState() {
+  localStorage.setItem('nb_bingo_card', JSON.stringify(bingoCard));
+  localStorage.setItem('nb_bingo_marked', JSON.stringify([...bingoMarked]));
+}
+
+function saveTerritoryState() {
+  localStorage.setItem('nb_territory_counts', JSON.stringify(territoryCounts));
+  localStorage.setItem('nb_current_team', currentTeam);
+}
+
+function updateUI() {
+  const n = collected.size;
+  document.getElementById('collected-label').textContent = n + ' / 47';
+  document.getElementById('hdr-count').textContent = n;
+  document.getElementById('ring-count').textContent = n;
+  const circ = 2 * Math.PI * 26;
+  const offset = circ * (1 - n/47);
+  document.getElementById('ring-fill').style.strokeDashoffset = offset;
+  document.querySelectorAll('.pref-path').forEach(el => {
+    const id = el.dataset.id;
+    if (collected.has(id)) el.classList.add('collected');
+    else el.classList.remove('collected');
+  });
+  renderMissions();
+  renderNeighborMissions();
+  renderLog();
+}
+
+// ===== MAP =====
+async function loadMap() {
+  try {
+    const res = await fetch(
+      'https://raw.githubusercontent.com/dataofjapan/land/master/japan.geojson'
+    );
+
+    const geo = await res.json();
+
+    console.log(geo);
+
+    mapGeo = geo;
+    buildMap(geo);
+    buildTerritoryMap(geo);
+
+  } catch(e) {
+    console.error(e);
+
+    document.getElementById('japan-svg').innerHTML =
+      '<text x="250" y="280" text-anchor="middle" fill="red">地図読み込み失敗</text>';
+  }
+}
+
+function getMapTools(geo) {
+  const W=500, H=560;
+  let x0=Infinity,x1=-Infinity,y0=Infinity,y1=-Infinity;
+  geo.features.forEach(f=>{
+    const rings = f.geometry.type==='Polygon'?f.geometry.coordinates:f.geometry.coordinates.flat();
+    rings.forEach(r=>r.forEach(([x,y])=>{if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y;}));
+  });
+  const sx=(W-40)/(x1-x0), sy=(H-40)/(y1-y0);
+  const sc=Math.min(sx,sy);
+  const ox=(W-(x1-x0)*sc)/2, oy=(H-(y1-y0)*sc)/2;
+  function p([x,y]){return[(ox+(x-x0)*sc).toFixed(1),(H-oy-(y-y0)*sc).toFixed(1)];}
+  function d(f){
+    const ringsArr = f.geometry.type==='Polygon'?f.geometry.coordinates:f.geometry.coordinates.flat(1);
+    return ringsArr.map(r=>'M'+r.map(c=>{const[px,py]=p(c);return px+','+py;}).join('L')+'Z').join('');
+  }
+  return {d};
+}
+
+function buildMap(geo) {
+
+  if (!geo.features) {
+    console.error("GeoJSON形式ではありません", geo);
+    return;
+  }
+  const svg = document.getElementById('japan-svg');
+  const {d} = getMapTools(geo);
+  const tt = document.getElementById('map-tooltip');
+  geo.features.forEach(f=>{
+    const prefName =
+      f.properties.name ||
+      f.properties.nam_ja ||
+      f.properties.prefecture ||
+      '';
+    const pref = PREFS.find(p => prefName.includes(p.name));
+    console.log(prefName);
+    if(!pref) return;
+    const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+    let pathData = d(f);
+    if(pref.id === "47"){
+      path.setAttribute('transform','translate(110,490) scale(2.5) translate(-75,-500)');
+      const box =
+      document.createElementNS('http://www.w3.org/2000/svg','rect');
+      box.setAttribute('x','125');
+      box.setAttribute('y','145');
+      box.setAttribute('width','70');
+      box.setAttribute('height','70');
+      box.setAttribute('fill','transparent');
+      box.setAttribute('stroke','#000000');
+      box.setAttribute('stroke-width','1');
+      box.setAttribute('rx','10');
+      box.style.cursor = "pointer";
+      box.addEventListener('click',()=>{
+        showPrefInfo("47","沖縄");
+        switchTab('info',document.querySelector('.tab-btn:nth-child(2)'));
+      });
+      addMapHover(box, pref);
+      svg.appendChild(box);
+    }
+    path.setAttribute('d', pathData);
+    path.setAttribute('class','pref-path');
+    path.dataset.id = pref.id;
+    path.dataset.name = pref.name;
+    if(collected.has(pref.id)) path.classList.add('collected');
+    addMapHover(path, pref);
+    function addMapHover(element, pref){
+      element.addEventListener('mouseenter',()=>{
+        tt.textContent = pref.name + (collected.has(pref.id)?'  ✓':'');
+        tt.className = collected.has(pref.id)?'':'uncollected';
+        tt.style.display='block';
+      });
+      element.addEventListener('mousemove',e=>{
+        tt.style.left=(e.clientX+14)+'px';
+        tt.style.top=(e.clientY-28)+'px';
+      });
+      element.addEventListener('mouseleave',()=>{
+        tt.style.display='none';
+      });
+    }
+    path.addEventListener('click',()=>{ showPrefInfo(pref.id, pref.name); switchTab('info', document.querySelector('.tab-btn:nth-child(2)')); });
+    svg.appendChild(path);
+  });
+}
+
+function getTerritoryPrefCounts(prefId) {
+  const base = {a:0,b:0,c:0,d:0};
+  return Object.assign(base, territoryCounts[prefId] || {});
+}
+
+function getTerritoryOwner(prefId) {
+  const counts = getTerritoryPrefCounts(prefId);
+  const teams = ['a','b','c','d'];
+  let best = null;
+  let bestCount = 0;
+  let tie = false;
+  teams.forEach(team=>{
+    if(counts[team] > bestCount){ best = team; bestCount = counts[team]; tie = false; }
+    else if(counts[team] === bestCount && bestCount > 0){ tie = true; }
+  });
+  return tie ? null : best;
+}
+
+function teamLabel(team) {
+  return {a:'Aチーム', b:'Bチーム', c:'Cチーム', d:'Dチーム'}[team] || '';
+}
+
+function teamClass(team) {
+  return team ? 'team-' + team : 'neutral';
+}
+
+function addTerritoryPoint(prefId, team) {
+  if(!territoryCounts[prefId]) territoryCounts[prefId] = {a:0,b:0,c:0,d:0};
+  territoryCounts[prefId][team] = (territoryCounts[prefId][team] || 0) + 1;
+  saveTerritoryState();
+  updateTerritoryMapColors();
+  renderTerritoryScores();
+}
+
+function buildTerritoryMap(geo) {
+
+  const svg = document.getElementById('territory-svg');
+  if(!svg || !geo || !geo.features) return;
+
+  svg.innerHTML = '';
+
+  const {d} = getMapTools(geo);
+  const tt = document.getElementById('map-tooltip');
+
+
+  geo.features.forEach(f=>{
+
+    const prefName =
+      f.properties.name ||
+      f.properties.nam_ja ||
+      f.properties.prefecture ||
+      '';
+
+    const pref = PREFS.find(p => prefName.includes(p.name));
+
+    if(!pref) return;
+
+
+    const path =
+      document.createElementNS(
+        'http://www.w3.org/2000/svg',
+        'path'
+      );
+
+
+    path.setAttribute('d', d(f));
+    path.setAttribute('class','territory-path');
+
+    path.dataset.id = pref.id;
+    path.dataset.name = pref.name;
+    
+    if(pref.id === '47'){
+      path.setAttribute('transform','translate(110,490) scale(2.5) translate(-75,-500)');
+      const box = document.createElementNS('http://www.w3.org/2000/svg','rect');
+      box.setAttribute('x','125');
+      box.setAttribute('y','145');
+      box.setAttribute('width','70');
+      box.setAttribute('height','70');
+      box.setAttribute('fill','transparent');
+      box.setAttribute('stroke','#000000');
+      box.setAttribute('stroke-width','1');
+      box.setAttribute('rx','10');
+      box.style.cursor = 'pointer';
+      box.addEventListener('mouseenter',()=>showTerritoryTooltip(tt, pref));
+      box.addEventListener('mousemove',moveTooltip);
+      box.addEventListener('mouseleave',()=>{ tt.style.display='none'; });
+      box.addEventListener('click',()=>showTerritoryDetail(pref.id, pref.name));
+      
+      svg.appendChild(box);
+    }
+
+    path.addEventListener(
+      'mouseenter',
+      ()=>{
+        showTerritoryTooltip(tt,pref);
+      }
+    );
+
+
+    path.addEventListener(
+      'mousemove',
+      moveTooltip
+    );
+
+
+    path.addEventListener(
+      'mouseleave',
+      ()=>{
+        tt.style.display='none';
+      }
+    );
+
+
+    path.addEventListener(
+      'click',
+      ()=>{
+        showTerritoryDetail(
+          pref.id,
+          pref.name
+        );
+      }
+    );
+
+
+    svg.appendChild(path);
+
+  });
+
+
+  updateTerritoryMapColors();
+  renderTerritoryScores();
+
+}
+
+function showTerritoryTooltip(tt, pref) {
+  const owner = getTerritoryOwner(pref.id);
+  tt.textContent = pref.name + ' ' + (owner ? teamLabel(owner) : '未占領');
+  tt.className = owner ? '' : 'uncollected';
+  tt.style.display='block';
+}
+
+function moveTooltip(e) {
+  const tt = document.getElementById('map-tooltip');
+  tt.style.left=(e.clientX+14)+'px';
+  tt.style.top=(e.clientY-28)+'px';
+}
+
+function updateTerritoryMapColors() {
+  document.querySelectorAll('.territory-path').forEach(path=>{
+    path.classList.remove('team-a','team-b','team-c','team-d','neutral');
+    path.classList.add(teamClass(getTerritoryOwner(path.dataset.id)));
+  });
+}
+
+function renderTerritoryScores() {
+  const list = document.getElementById('territory-score-list');
+  if(!list) return;
+  const owned = {a:0,b:0,c:0,d:0};
+  let ownedTotal = 0;
+  PREFS.forEach(pref=>{
+    const owner = getTerritoryOwner(pref.id);
+    if(owner){
+      owned[owner]++;
+      ownedTotal++;
+    }
+  });
+  const label = document.getElementById('territory-owner-label');
+  if(label) label.textContent = ownedTotal + ' / 47';
+  list.innerHTML = ['a','b','c','d'].map(team=>`
+    <div class="territory-team-row">
+      <span><span class="territory-dot team-${team}-bg"></span>${teamLabel(team)}</span>
+      <strong>${owned[team]}県</strong>
+    </div>
+  `).join('');
+}
+
+function showTerritoryDetail(prefId, prefName) {
+  const counts = getTerritoryPrefCounts(prefId);
+  const owner = getTerritoryOwner(prefId);
+  document.getElementById('territory-detail').innerHTML = `
+    <strong>${prefName}</strong><br>
+    現在: ${owner ? teamLabel(owner) : '未占領'}<br>
+    A:${counts.a} / B:${counts.b} / C:${counts.c} / D:${counts.d}
+  `;
+}
+
+function selectTeam(team) {
+  currentTeam = team;
+  saveTerritoryState();
+  document.querySelectorAll('.team-btn').forEach(btn=>{
+    const active = btn.dataset.team === team;
+    btn.classList.toggle('active', active);
+    btn.classList.toggle('team-a-bg', active && team === 'a');
+    btn.classList.toggle('team-b-bg', active && team === 'b');
+    btn.classList.toggle('team-c-bg', active && team === 'c');
+    btn.classList.toggle('team-d-bg', active && team === 'd');
+  });
+}
+
+function renderMyTeam(){
+
+  const el = document.getElementById('team-select');
+
+  if(!el) return;
+
+  el.innerHTML = `
+    <button class="team-btn team-${currentTeam}-bg" disabled>
+      ${currentTeam.toUpperCase()}チーム
+    </button>
+  `;
+
+}
+
+function openTerritoryPage() {
+  document.getElementById('header-menu').classList.remove('show');
+  document.getElementById('main-page').classList.remove('active');
+  document.getElementById('territory-page').classList.add('active');
+  if(mapGeo) buildTerritoryMap(mapGeo);
+}
+
+function openMainPage() {
+  document.getElementById('territory-page').classList.remove('active');
+  document.getElementById('main-page').classList.add('active');
+}
+
+// ===== CAMERA =====
+async function startCamera() {
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
+    const v = document.getElementById('video');
+    v.srcObject = stream;
+    v.style.display='block';
+    document.getElementById('cam-idle').style.display='none';
+    document.getElementById('btn-capture').disabled=false;
+    const btn = document.getElementById('btn-camera');
+    btn.innerHTML='<i class="ti ti-camera-check"></i> 起動中';
+    btn.disabled=true;
+  } catch(e) {
+    showResult('error','カメラへのアクセスが拒否されました');
+  }
+}
+
+async function captureAndAnalyze() {
+  const v=document.getElementById('video'), c=document.getElementById('canvas');
+  if(!stream){showResult('error','先にカメラを起動してください');return;}
+  c.width=v.videoWidth||640; c.height=v.videoHeight||480;
+  c.getContext('2d').drawImage(v,0,0);
+  const img = c.toDataURL('image/jpeg',0.85).split(',')[1];
+  document.getElementById('btn-capture').disabled=true;
+  document.getElementById('scan-overlay').style.display='block';
+  document.getElementById('analyzing-box').className='analyzing-box show';
+  document.getElementById('result-box').className='result-box';
+  try {
+    const res = await fetch('http://127.0.0.1:5000/analyze',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        image: img
+      })
+    });
+
+   const parsed = await res.json();
+   
+    document.getElementById('scan-overlay').style.display='none';
+    document.getElementById('analyzing-box').className='analyzing-box';
+    document.getElementById('btn-capture').disabled=false;
+    if(parsed&&parsed.found&&parsed.prefecture&&parsed.plate_number){
+      const pref=PREFS.find(p=>p.name===parsed.prefecture||parsed.prefecture.includes(p.name));
+      if(pref){
+        const areaLabel = parsed.plate_area ? `「${parsed.plate_area}」ナンバー` : pref.name;
+        const plateNumber = parsed.plate_number;
+        markBingoFromPlate(plateNumber);
+        addTerritoryPoint(pref.id, currentTeam);
+        if(collected.has(pref.id)){
+          showResult('already',`このナンバーは登録済み！`);
+          addLog(`ナンバーが重複`, false);
+        } else {
+          const prevMissions = completedMissionCount();
+          collected.add(pref.id);
+          neighborMissions.forEach(m => {
+            if(m.target === pref.name){
+              m.completed = true;
+            }
+          });
+          const newMission =
+          createNeighborMissions(pref.name);
+          renderNeighborMissions();
+          if(newMission){
+            showToast(
+              `🧭 新ミッション！ ${newMission.target}県を登録しよう`
+            );
+          }
+          saveState();
+          markMapCollected(pref.id);
+          updateUI();
+          showResult('success',`${areaLabel}（${pref.name}）をゲット！`);
+          showToast(`🎉 ${pref.name} を制覇！`, false);
+          addLog(`${pref.name} を発見! ナンバー:${plateNumber}`, true);
+          checkMissions(prevMissions);
+        }
+      } else {
+        showResult('error',`「${parsed.prefecture}」を都道府県に特定できませんでした`);
+      }
+    } else if(parsed && (parsed.reason === 'number_not_found' || (parsed.found && parsed.prefecture && !parsed.plate_number))) {
+      showResult('error','ナンバーの数字が読み取れませんでした。もう一度撮影してください');
+    } else {
+      showResult('error','ナンバープレートが見つかりませんでした');
+    }
+  } catch(e) {
+    document.getElementById('scan-overlay').style.display='none';
+    document.getElementById('analyzing-box').className='analyzing-box';
+    document.getElementById('btn-capture').disabled=false;
+    showResult('error','認識エラーが発生しました');
+  }
+}
+
+function markMapCollected(id) {
+  const el = document.querySelector(`.pref-path[data-id="${id}"]`);
+  if(el){ el.classList.add('flash'); setTimeout(()=>{el.classList.remove('flash');el.classList.add('collected');},800); }
+}
+
+function showResult(type, msg) {
+  const el = document.getElementById('result-box');
+  const icons={success:'ti-check',already:'ti-refresh',error:'ti-alert-triangle'};
+  el.className=`result-box show ${type}`;
+  el.innerHTML=`<i class="ti ${icons[type]}"></i>${msg}`;
+  setTimeout(()=>{el.className='result-box';},5000);
+}
+
+// ===== PREF INFO =====
+async function showPrefInfo(id, name) {
+  if(!collected.has(id)){
+    const container = document.getElementById('pref-info-content');
+
+    container.innerHTML = `
+      <div class="pref-info-card">
+        <div class="pref-info-header">
+          <span class="pref-info-name">${name}</span>
+        </div>
+        <div class="pref-info-body" style="text-align:center;padding:30px;">
+          <div style="font-size:50px;">🔒</div>
+          <p style="margin-top:10px;font-weight:bold;">
+            この県はまだゲットしていません
+          </p>
+          <p style="color:var(--muted);font-size:0.8rem;">
+            ナンバープレートを認識すると解放されます
+          </p>
+        </div>
+      </div>
+    `;
+    return;
+  }
+  const container = document.getElementById('pref-info-content');
+  container.innerHTML = `
+    <div class="pref-info-card">
+      <div class="pref-info-header">
+        <span class="pref-info-name">${name}</span>
+        ${collected.has(id)
+          ? '<span style="font-size:0.75rem;color:#52b788">✓ 制覇済み</span>'
+          : '<span style="font-size:0.75rem;opacity:0.5">未制覇</span>'}
+      </div>
+
+      <div class="pref-info-body">
+        <div class="spots-loading">
+          スポット情報を取得中...
+        </div>
+      </div>
+    </div>
+
+    `;
+
+  renderSection(id, name);
+}
+
+function renderCategory(title, icon, items){
+
+  if(!items.length){
+    return '';
+  }
+
+  return `
+    <h3 style="margin:20px 0 10px;">
+      ${icon} ${title}
+    </h3>
+
+    <ul class="spot-list">
+      ${items.map(item=>`
+        <li class="spot-item">
+          <div class="spot-name">
+            ${icon} ${item.name}
+          </div>
+
+          <div class="spot-desc">
+            ${item.desc}
+          </div>
+        </li>
+      `).join('')}
+    </ul>
+  `;
+}
+
+function renderSection(id, name){
+
+  const body = document.querySelector('.pref-info-body');
+  if(!body) return;
+
+  body.innerHTML = `
+    ${renderCategory(
+      '観光スポット',
+      '📍',
+      PREF_SPOTS[name] || []
+    )}
+
+    ${renderCategory(
+      'ご当地グルメ',
+      '🍜',
+      PREF_FOOD[name] || []
+    )}
+  `;
+}
+
+function renderPrefSpots(spots){
+
+  return `
+    <h3 style="margin-bottom:10px;">
+      🏞 観光スポット
+    </h3>
+
+    <ul class="spot-list">
+      ${spots.map(s=>`
+        <li class="spot-item">
+          <div class="spot-name">
+            📍 ${s.name}
+          </div>
+
+          <div class="spot-desc">
+            ${s.desc}
+          </div>
+        </li>
+      `).join('')}
+    </ul>
+  `;
+}
+
+function renderPrefFood(foods){
+
+  return `
+    <h3 style="margin:20px 0 10px;">
+      🍜 ご当地グルメ
+    </h3>
+
+    <ul class="spot-list">
+      ${foods.map(f=>`
+        <li class="spot-item">
+          <div class="spot-name">
+            🍜 ${f.name}
+          </div>
+
+          <div class="spot-desc">
+            ${f.desc}
+          </div>
+        </li>
+      `).join('')}
+    </ul>
+  `;
+}
+
+// ===== MISSIONS =====
+function completedMissionCount(){
+  return MISSIONS.filter(m=>m.prefs.every(p=>collected.has(p))).length;
+}
+
+function renderMissions() {
+  const container = document.getElementById('missions-list');
+  const completed = MISSIONS.filter(m=>m.prefs.every(p=>collected.has(p))).length;
+  document.getElementById('hdr-missions').textContent = completed;
+  document.getElementById('hdr-missions-total').textContent = MISSIONS.length;
+  container.innerHTML = MISSIONS.map(m=>{
+    const done = m.prefs.every(p=>collected.has(p));
+    const cnt = m.prefs.filter(p=>collected.has(p)).length;
+    const pct = Math.round(cnt/m.prefs.length*100);
+    const prefTags = m.prefs.map(pid=>{
+      const p=PREFS.find(x=>x.id===pid);
+      const d=collected.has(pid);
+      return `<span class="mission-pref-tag ${d?'done':''}">${p?p.name:pid}</span>`;
+    }).join('');
+    return `<div class="mission-card ${done?'completed':''}">
+      <div class="mission-header">
+        <div class="mission-icon">${m.icon}</div>
+        <div class="mission-info">
+          <div class="mission-name">${m.name}</div>
+          <div class="mission-desc">${m.desc}</div>
+        </div>
+        <span class="mission-badge ${done?'done':'prog'}">${done?'達成！':cnt+'/'+m.prefs.length}</span>
+      </div>
+      <div class="mission-progress-bar"><div class="mission-progress-fill" style="width:${pct}%"></div></div>
+      <div class="mission-prefs">${prefTags}</div>
+    </div>`;
+  }).join('');
+}
+
+function checkMissions(prevCount) {
+  const newCount = completedMissionCount();
+  if(newCount > prevCount) {
+    const newMissions = MISSIONS.filter(m=>m.prefs.every(p=>collected.has(p)));
+    const latest = newMissions[newMissions.length-1];
+    if(latest) showToast(`🏆 ミッション達成！「${latest.name}」`, true);
+  }
+}
+
+function createNeighborMissions(prefName){
+
+  const neighbors = PREF_NEIGHBORS[prefName];
+  if(!neighbors) return;
+
+  const targets = neighbors.filter(n=>{
+    const p = PREFS.find(x=>x.name===n);
+    return p && !collected.has(p.id);
+  });
+
+  if(targets.length===0) return;
+
+  const target =
+    targets[Math.floor(Math.random()*targets.length)];
+
+  const mission = {
+    from: prefName,
+    target,
+    completed:false
+  };
+
+  neighborMissions.unshift(mission);
+
+  localStorage.setItem(
+    'nb_neighbor_mission',
+    JSON.stringify(neighborMissions)
+  );
+
+  return mission;
+}
+
+function renderNeighborMissions(){
+
+  const el =
+    document.getElementById('neighbor-missions');
+
+  if(!el) return;
+
+  if(
+    !neighborMissions ||
+    neighborMissions.length===0
+  ){
+    el.innerHTML='';
+    return;
+  }
+  const activeMission =
+  neighborMissions.find(m => !m.completed);
+  
+  const latestCompleted =
+  neighborMissions.find(m => m.completed);
+  
+  const missionsToShow = [];
+
+  if(latestCompleted){
+    missionsToShow.push(latestCompleted);
+  }
+  
+  if(activeMission){
+    missionsToShow.push(activeMission);
+  }
+  
+  el.innerHTML =
+    missionsToShow.map(m=>`
+
+      <div class="mission-card ${m.completed ? 'completed' : ''}">
+        <div class="mission-header">
+
+          <div class="mission-icon">
+            🧭
+          </div>
+
+          <div class="mission-info">
+
+            <div class="mission-name">
+              連続ミッション
+            </div>
+
+            <div class="mission-desc">
+              ${m.from}県をゲット！
+
+              <br>
+
+              次は
+              <b>${m.target}県</b>
+              を登録してみよう
+            </div>
+
+          </div>
+
+          <span class="mission-badge ${m.completed ? 'done' : 'prog'}">
+            ${m.completed ? '達成！' : '進行中'}
+          </span>
+
+        </div>
+      </div>
+
+    `).join('');
+}
+
+// ===== LOG =====
+function addLog(text, isNew) {
+  const now = new Date();
+  const time = now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');
+  logEntries.unshift({text,time,isNew});
+  if(logEntries.length>50) logEntries.pop();
+  saveState();
+  renderLog();
+}
+
+function renderLog() {
+  const el = document.getElementById('log-list');
+  if(!logEntries.length){
+    el.innerHTML='<div style="color:var(--muted);font-size:0.82rem;padding:1rem 0;text-align:center">まだ記録がありません</div>';
+    return;
+  }
+  el.innerHTML = logEntries.map((l,i)=>`
+    <div class="log-item">
+      <span class="log-dot ${i>0?'old':''}"></span>
+      <span style="font-size:0.82rem">${l.text}</span>
+      <span class="log-time">${l.time}</span>
+    </div>`).join('');
+}
+
+// ===== BINGO =====
+function shuffleNumbers(nums) {
+  for(let i=nums.length-1; i>0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [nums[i], nums[j]] = [nums[j], nums[i]];
+  }
+  return nums;
+}
+
+function createBingoCard() {
+  const columns = Array.from({length:5}, (_,col)=>{
+    const start = col * 20;
+    const nums = Array.from({length:20}, (_,i)=>String(start + i).padStart(2,'0'));
+    return shuffleNumbers(nums).slice(0,5);
+  });
+  const card = [];
+  for(let row=0; row<5; row++){
+    for(let col=0; col<5; col++){
+      card.push(row === 2 && col === 2 ? 'FREE' : columns[col][row]);
+    }
+  }
+  return card;
+}
+
+function isValidBingoCard(card) {
+  if(!Array.isArray(card) || card.length !== 25) return false;
+  if(card[12] !== 'FREE') return false;
+  for(let i=0; i<25; i++){
+    if(i === 12) continue;
+    const col = i % 5;
+    const num = Number(card[i]);
+    if(!/^\d{2}$/.test(String(card[i]))) return false;
+    if(num < col * 20 || num > col * 20 + 19) return false;
+  }
+  return true;
+}
+
+function getBingoLines() {
+  const lines = [];
+  for(let r=0; r<5; r++) lines.push([0,1,2,3,4].map(c=>r*5+c));
+  for(let c=0; c<5; c++) lines.push([0,1,2,3,4].map(r=>r*5+c));
+  lines.push([0,6,12,18,24]);
+  lines.push([4,8,12,16,20]);
+  return lines;
+}
+
+function getBingoStats() {
+  let lineCount = 0;
+  let reachCount = 0;
+  getBingoLines().forEach(line=>{
+    const marked = line.filter(i=>bingoMarked.has(bingoCard[i])).length;
+    if(marked === 5) lineCount++;
+    else if(marked === 4) reachCount++;
+  });
+  return {lineCount, reachCount};
+}
+
+function renderBingo() {
+  const grid = document.getElementById('bingo-grid');
+  if(!grid) return;
+  grid.innerHTML = bingoCard.map(num=>`
+    <div class="bingo-cell ${num === 'FREE' ? 'free marked' : (bingoMarked.has(num)?'marked':'')}">${num}</div>
+  `).join('');
+  const stats = getBingoStats();
+  document.getElementById('bingo-marked-count').textContent = bingoCard.filter(n=>bingoMarked.has(n)).length;
+  document.getElementById('bingo-reach-count').textContent = stats.reachCount;
+  document.getElementById('bingo-line-count').textContent = stats.lineCount;
+}
+
+function openBingoModal() {
+  document.getElementById('header-menu').classList.remove('show');
+  renderBingo();
+  document.getElementById('bingo-modal').classList.add('show');
+}
+
+function closeBingoModal() {
+  document.getElementById('bingo-modal').classList.remove('show');
+}
+
+function resetBingoCard() {
+  if(!confirm('ビンゴカードを作り直しますか？')) return;
+  bingoCard = createBingoCard();
+  bingoMarked = new Set(['FREE']);
+  saveBingoState();
+  renderBingo();
+}
+
+function markBingoFromPlate(plateNumber) {
+  const parts = String(plateNumber || '').match(/^(\d{2})-(\d{2})$/);
+  if(!parts) return;
+  const before = getBingoStats().lineCount;
+  const markedNums = [parts[1], parts[2]];
+  let changed = false;
+  markedNums.forEach(num=>{
+    if(bingoCard.includes(num) && !bingoMarked.has(num)){
+      bingoMarked.add(num);
+      changed = true;
+    }
+  });
+  if(!changed) return;
+  saveBingoState();
+  renderBingo();
+  const after = getBingoStats().lineCount;
+  if(after > before) showToast('ビンゴ達成！', true);
+  else showToast(`ビンゴ数字 ${markedNums.join('・')} をチェック`, false);
+}
+
+// ===== TOAST =====
+function showToast(msg, isMission) {
+  const tc = document.getElementById('toast-container');
+  const t = document.createElement('div');
+  t.className='toast'+(isMission?' mission-complete':'');
+  t.innerHTML=`<span class="toast-icon">${isMission?'🏆':'🗾'}</span>${msg}`;
+  tc.appendChild(t);
+  setTimeout(()=>{
+    t.classList.add('fade-out');
+    setTimeout(()=>t.remove(),350);
+  },3500);
+}
+
+// ===== TABS =====
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-content').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(el=>el.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  if(btn) btn.classList.add('active');
+}
+
+function toggleMenu() {
+  document.getElementById('header-menu')
+    .classList.toggle('show');
+}
+
+function showComingSoon(name) {
+  document.getElementById('header-menu')
+    .classList.remove('show');
+
+  document.getElementById('modal-text')
+    .textContent = `${name}機能は現在準備中です`;
+
+  document.getElementById('coming-soon-modal')
+    .classList.add('show');
+}
+
+function closeModal() {
+  document.getElementById('coming-soon-modal')
+    .classList.remove('show');
+}
+
+// メニュー外クリックで閉じる
+document.addEventListener('click', function(e){
+  const menu = document.getElementById('header-menu');
+  const logo = document.querySelector('.logo');
+
+  if (
+    menu &&
+    logo &&
+    !menu.contains(e.target) &&
+    !logo.contains(e.target)
+  ) {
+    menu.classList.remove('show');
+  }
+});
+
+document.getElementById('coming-soon-modal').addEventListener('click', function(e){
+
+  if(e.target === this){
+    this.classList.remove('show');
+  }
+
+});
+
+let selectedAvatar = "😀";
+
+function openAccountModal(){
+
+  document.getElementById('account-name').value =
+    localStorage.getItem('nb_name') || '';
+
+  document.getElementById('account-id').value =
+    localStorage.getItem('nb_id') || '';
+
+  document.getElementById('account-modal')
+    .classList.add('show');
+}
+
+function selectAvatar(el){
+
+  document
+    .querySelectorAll('.avatar-option')
+    .forEach(a=>a.classList.remove('selected'));
+
+  el.classList.add('selected');
+
+  selectedAvatar = el.textContent;
+}
+
+function saveAccount(){
+
+  const name =
+    document.getElementById('account-name').value.trim();
+
+  const id =
+    document.getElementById('account-id').value.trim();
+
+  // 入力チェック
+  if(!name){
+    alert('名前を入力してください');
+    return;
+  }
+
+  if(!id){
+    alert('IDを入力してください');
+    return;
+  }
+
+  localStorage.setItem('nb_name', name);
+  localStorage.setItem('nb_id', id);
+  localStorage.setItem('nb_avatar', selectedAvatar);
+
+  alert('保存しました！');
+
+  document.getElementById('account-modal')
+    .classList.remove('show');
+}
+
+document.getElementById('account-modal').addEventListener('click', function(e){
+
+  if(e.target === this){
+    this.classList.remove('show');
+  }
+
+});
+
+document.getElementById('bingo-modal').addEventListener('click', function(e){
+
+  if(e.target === this){
+    this.classList.remove('show');
+  }
+
+});
+
+// ===== BOOT =====
+loadMap();
+renderMyTeam();
+renderMissions();
+renderNeighborMissions();
+renderLog();
+renderBingo();
+renderTerritoryScores();
+selectTeam(currentTeam);
+updateUI();
+</script>
+</body>
+</html>
