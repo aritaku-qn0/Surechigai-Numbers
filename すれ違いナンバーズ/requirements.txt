@@ -1,7 +1,0 @@
-flask
-flask-cors
-easyocr
-opencv-python-headless
-numpy
-torch
-torchvision
