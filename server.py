@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
 import easyocr
 import base64
@@ -175,7 +175,10 @@ PREF_MAP = {
     "奄美":"鹿児島",
     "沖縄":"沖縄"
 }
-@app.route("/analyze", methods=["POST"])
+@app.route("/")
+def index():
+    return send_file("numplate_game.html")
+
 def analyze():
 
     global reader
