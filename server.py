@@ -179,6 +179,7 @@ PREF_MAP = {
 def index():
     return send_file("すれ違いナンバーズ/numplate_game.html")
 
+@app.route("/analyze", methods=["POST"])
 def analyze():
 
     global reader
