@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
-import easyocr
+import requests
+import os
 import base64
 import cv2
 import numpy as np
@@ -8,9 +9,6 @@ import re
 
 app = Flask(__name__)
 CORS(app)
-
-reader = None
-
 
 def normalize_ocr_text(text):
     table = str.maketrans(
@@ -182,23 +180,32 @@ def index():
 @app.route("/analyze", methods=["POST"])
 def analyze():
 
-    global reader
-    if reader is None:
-        reader = easyocr.Reader(['ja', 'en'])
+data = request.json
 
-    data = request.json
+image_base64 = data["image"]
 
-    image_base64 = data["image"]
+image_bytes = base64.b64decode(image_base64)
 
-    image_bytes = base64.b64decode(image_base64)
+api_key = os.environ["OCR_SPACE_API_KEY"]
 
-    np_array = np.frombuffer(image_bytes, np.uint8)
+response = requests.post(
+    "https://api.ocr.space/parse/image",
+    files={
+        "image": ("plate.jpg", image_bytes)
+    },
+    data={
+        "apikey": api_key,
+        "language": "jpn"
+    }
+)
 
-    image = cv2.imdecode(np_array, cv2.IMREAD_COLOR)
+result = response.json()
 
-    results = reader.readtext(image)
+text = ""
 
-    text = " ".join([r[1] for r in results])
+if result.get("ParsedResults"):
+    text = result["ParsedResults"][0]["ParsedText"]
+    
     plate_number = extract_plate_number(text)
 
     print("OCR結果:", text)
