@@ -192,6 +192,11 @@ def analyze():
 
     image_bytes = base64.b64decode(image_base64)
 
+    image = cv2.imdecode(np.frombuffer(image_bytes, np.uint8), cv2.IMREAD_COLOR)
+    image = cv2.resize(image, None, fx=2, fy=2, interpolation=cv2.INTER_CUBIC)
+    _, buffer = cv2.imencode(".jpg", image)
+    image_bytes = buffer.tobytes()
+
     api_key = os.environ["OCR_SPACE_API_KEY"]
 
     response = requests.post(
@@ -202,6 +207,7 @@ def analyze():
         data={
             "apikey": api_key,
             "language": "jpn"
+            "OCREngine": 2
         }
     )
 
