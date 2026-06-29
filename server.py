@@ -183,6 +183,8 @@ def static_files(filename):
 
 @app.route("/analyze", methods=["POST"])
 def analyze():
+    
+    print("analyze開始", flush=True)
 
     data = request.json
 
@@ -212,9 +214,9 @@ def analyze():
     
     plate_number = extract_plate_number(text)
 
-    print("OCR結果:", repr(text))
-    print("読み取り番号:", plate_number)
-    print(result)
+    print("OCR結果:", repr(text), flush=True)
+    print("読み取り番号:", plate_number, flush=True)
+    print(result, flush=True)
 
     for area, pref in PREF_MAP.items():
         if area in text:
