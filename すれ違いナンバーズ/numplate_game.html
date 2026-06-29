@@ -1220,6 +1220,19 @@ main {
 <script>
 console.log("HTMLのscript開始");
 // ===== DATA =====
+
+const auth = window.auth;
+const db = window.db;
+const provider = window.provider;
+
+const setDoc = window.setDoc;
+const getDoc = window.getDoc;
+const doc = window.doc;
+
+const signInWithPopup = window.signInWithPopup;
+const signOut = window.signOut;
+const onAuthStateChanged = window.onAuthStateChanged;
+
 const PREFS = [
   {id:"01",name:"北海道"},{id:"02",name:"青森"},{id:"03",name:"岩手"},{id:"04",name:"宮城"},{id:"05",name:"秋田"},
   {id:"06",name:"山形"},{id:"07",name:"福島"},{id:"08",name:"茨城"},{id:"09",name:"栃木"},{id:"10",name:"群馬"},
@@ -2423,8 +2436,23 @@ window.addEventListener("load", () => {
 
     console.log("window load");
 
-    console.log(window.auth);
-    console.log(window.onAuthStateChanged);
+    onAuthStateChanged(auth, async (user) => {
+
+        console.log("認証状態が変わりました");
+
+        if (user) {
+
+            console.log("ログイン中");
+            console.log(user.displayName);
+            console.log(user.email);
+
+        } else {
+
+            console.log("ログアウトしています");
+
+        }
+
+    });
 
 });
 //onAuthStateChanged(auth, async (user) => {
