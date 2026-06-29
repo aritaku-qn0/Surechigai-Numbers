@@ -177,7 +177,7 @@ PREF_MAP = {
 }
 @app.route("/")
 def index():
-    return send_file("numplate_game.html")
+    return send_file("すれ違いナンバーズ/numplate_game.html")
 
 def analyze():
 
