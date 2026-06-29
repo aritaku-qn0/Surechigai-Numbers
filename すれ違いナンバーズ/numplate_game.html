@@ -2419,21 +2419,20 @@ renderBingo();
 renderTerritoryScores();
 selectTeam(currentTeam);
 updateUI();
-onAuthStateChanged(auth, (user) => {
+onAuthStateChanged(auth, async (user) => {
 
     console.log("認証状態が変わりました");
 
     if (user) {
 
         console.log("ログイン中");
-
-        console.log(user.displayName);
-
-        console.log(user.email);
+        console.log("UID:", user.uid);
+        console.log("名前:", user.displayName);
+        console.log("メール:", user.email);
 
     } else {
 
-        console.log("ログアウト中");
+        console.log("ログアウトしています");
 
     }
 
