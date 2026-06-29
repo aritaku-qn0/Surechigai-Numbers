@@ -206,8 +206,8 @@ def analyze():
         },
         data={
             "apikey": api_key,
-            "language": "jpn"
-            "OCREngine": 2
+            "language": "jpn",
+            "OCREngine": "2"
         }
     )
 
