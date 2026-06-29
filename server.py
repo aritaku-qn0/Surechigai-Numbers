@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, send_file
+from flask import Flask, request, jsonify, send_file, send_from_directory
 from flask_cors import CORS
 import requests
 import os
@@ -176,6 +176,10 @@ PREF_MAP = {
 @app.route("/")
 def index():
     return send_file("すれ違いナンバーズ/numplate_game.html")
+
+@app.route("/<path:filename>")
+def static_files(filename):
+    return send_from_directory("すれ違いナンバーズ", filename)
 
 @app.route("/analyze", methods=["POST"])
 def analyze():
