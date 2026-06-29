@@ -180,31 +180,31 @@ def index():
 @app.route("/analyze", methods=["POST"])
 def analyze():
 
-data = request.json
+    data = request.json
 
-image_base64 = data["image"]
+    image_base64 = data["image"]
 
-image_bytes = base64.b64decode(image_base64)
+    image_bytes = base64.b64decode(image_base64)
 
-api_key = os.environ["OCR_SPACE_API_KEY"]
+    api_key = os.environ["OCR_SPACE_API_KEY"]
 
-response = requests.post(
-    "https://api.ocr.space/parse/image",
-    files={
-        "image": ("plate.jpg", image_bytes)
-    },
-    data={
-        "apikey": api_key,
-        "language": "jpn"
-    }
-)
+    response = requests.post(
+        "https://api.ocr.space/parse/image",
+        files={
+            "image": ("plate.jpg", image_bytes)
+        },
+        data={
+            "apikey": api_key,
+            "language": "jpn"
+        }
+    )
 
-result = response.json()
+    result = response.json()
 
-text = ""
+    text = ""
 
-if result.get("ParsedResults"):
-    text = result["ParsedResults"][0]["ParsedText"]
+    if result.get("ParsedResults"):
+        text = result["ParsedResults"][0]["ParsedText"]
     
     plate_number = extract_plate_number(text)
 
