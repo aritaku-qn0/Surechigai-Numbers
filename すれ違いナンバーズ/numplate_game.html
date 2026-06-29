@@ -2419,35 +2419,23 @@ renderBingo();
 renderTerritoryScores();
 selectTeam(currentTeam);
 updateUI();
-onAuthStateChanged(auth, async (user) => {
+onAuthStateChanged(auth, (user) => {
 
-  console.log("onAuthStateChanged", user);
+    console.log("認証状態が変わりました");
 
-  const btn = document.getElementById("google-login-btn");
-  console.log(btn);
+    if (user) {
 
-  if (user) {
+        console.log("ログイン中");
 
-    document.getElementById("account-name").value =
-      user.displayName || "";
+        console.log(user.displayName);
 
-    document.getElementById("account-id").value =
-      user.email || "";
+        console.log(user.email);
 
-    btn.textContent = "ログアウト";
-    btn.onclick = logout;   // 既存のlogout()を使う
+    } else {
 
-    await loadUserData();
+        console.log("ログアウト中");
 
-  } else {
-
-    document.getElementById("account-name").value = "";
-    document.getElementById("account-id").value = "";
-
-    btn.textContent = "Googleでログイン";
-    btn.onclick = googleLogin;
-
-  }
+    }
 
 });
 </script>
