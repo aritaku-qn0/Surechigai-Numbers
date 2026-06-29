@@ -1201,8 +1201,8 @@ main {
     </div>
 
     <div class="modal-btn-wrap">
-      <button class="btn primary" onclick="saveAccount()">
-        保存
+      <button class="btn primary" onclick="googleLogin()">
+        Googleでログイン
       </button>
     </div>
   </div>
@@ -1218,7 +1218,15 @@ main {
 <script src="pref_neighbors.js"></script>
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
-  import { getAuth } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
+
+  import {
+    getAuth,
+    GoogleAuthProvider,
+    signInWithPopup,
+    signOut,
+    onAuthStateChanged
+  } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
+
   import {
     getFirestore,
     doc,
@@ -1238,6 +1246,7 @@ main {
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getFirestore(app);
+  const provider = new GoogleAuthProvider();
 // ===== DATA =====
 const PREFS = [
   {id:"01",name:"北海道"},{id:"02",name:"青森"},{id:"03",name:"岩手"},{id:"04",name:"宮城"},{id:"05",name:"秋田"},
@@ -1348,6 +1357,24 @@ async function saveState() {
   },{merge:true});
 }
 
+async function loadUserData() {
+  const snap = await getDoc(doc(db, "users", auth.currentUser.uid));
+
+  if (!snap.exists()) return;
+
+  const data = snap.data();
+
+  collected = new Set(data.collected || []);
+  logEntries = data.logEntries || [];
+  bingoCard = data.bingoCard || null;
+  bingoMarked = new Set(data.bingoMarked || []);
+  territoryCounts = data.territoryCounts || {};
+  currentTeam = data.currentTeam || "a";
+  neighborMissions = data.neighborMissions || [];
+
+  updateUI();
+}
+
 await setDoc(doc(db,"users",auth.currentUser.uid),{
 
     bingoCard:bingoCard,
@@ -1361,6 +1388,26 @@ await setDoc(doc(db,"users",auth.currentUser.uid),{
     currentTeam
 
 },{merge:true});
+
+async function googleLogin(){
+
+  try{
+
+    await signInWithPopup(auth, provider);
+
+  }catch(e){
+
+    console.error(e);
+
+  }
+
+}
+
+async function logout(){
+
+  await signOut(auth);
+
+}
 
 function updateUI() {
   const n = collected.size;
@@ -2370,6 +2417,12 @@ renderBingo();
 renderTerritoryScores();
 selectTeam(currentTeam);
 updateUI();
+onAuthStateChanged(auth, async(user)=>{
+  if(user){
+    console.log(user.displayName);
+    //await loadUserData();
+  }
+})
 </script>
 </body>
 </html>
