@@ -208,8 +208,9 @@ def analyze():
     
     plate_number = extract_plate_number(text)
 
-    print("OCR結果:", text)
+    print("OCR結果:", repr(text))
     print("読み取り番号:", plate_number)
+    print(result)
 
     for area, pref in PREF_MAP.items():
         if area in text:
