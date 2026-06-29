@@ -1349,8 +1349,11 @@ async function saveState() {
 }
 
 async function saveBingoState() {
-  await setDoc(
-    doc(db, "users", auth.currentUser.uid),
+
+  if (!window.auth || !window.auth.currentUser) return;
+
+  await window.setDoc(
+    window.doc(window.db, "users", window.auth.currentUser.uid),
     {
       bingoCard,
       bingoMarked: [...bingoMarked]
@@ -1360,9 +1363,11 @@ async function saveBingoState() {
 }
 
 async function saveTerritoryState() {
-  if (!auth.currentUser) return;
-  await setDoc(
-    doc(db, "users", auth.currentUser.uid),
+
+  if (!window.auth || !window.auth.currentUser) return;
+
+  await window.setDoc(
+    window.doc(window.db, "users", window.auth.currentUser.uid),
     {
       territoryCounts,
       currentTeam
@@ -2436,7 +2441,7 @@ window.addEventListener("load", () => {
 
     console.log("window load");
 
-    onAuthStateChanged(auth, async (user) => {
+    window.onAuthStateChanged(window.auth, async (user) => {
 
         console.log("認証状態が変わりました");
 
