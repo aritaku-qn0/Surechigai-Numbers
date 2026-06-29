@@ -2301,10 +2301,14 @@ function switchTab(name, btn) {
   if(btn) btn.classList.add('active');
 }
 
+window.switchTab = switchTab;
+
 function toggleMenu() {
   document.getElementById('header-menu')
     .classList.toggle('show');
 }
+
+window.toggleMenu = toggleMenu;
 
 function showComingSoon(name) {
   document.getElementById('header-menu')
