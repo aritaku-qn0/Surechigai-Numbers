@@ -1321,6 +1321,12 @@ if(!isValidBingoCard(bingoCard)){
 
 // ===== INIT =====
 async function saveState() {
+
+  localStorage.setItem('nb_collected', JSON.stringify([...collected]));
+  localStorage.setItem('nb_log', JSON.stringify(logEntries.slice(0,50)));
+  
+  if (!auth.currentUser) return;
+  
   await setDoc(doc(db,"users",auth.currentUser.uid),{
 
       collected:[...collected],
@@ -1341,6 +1347,7 @@ async function saveBingoState() {
 }
 
 async function saveTerritoryState() {
+  if (!auth.currentUser) return;
   await setDoc(
     doc(db, "users", auth.currentUser.uid),
     {
@@ -1374,7 +1381,9 @@ async function googleLogin() {
     const result = await signInWithPopup(auth, provider);
 
     console.log("ログイン成功");
-    console.log(result.user);
+    console.log("UID:", result.user.uid);
+    console.log("名前:", result.user.displayName);
+    console.log("メール:", result.user.email);
 
   } catch (e) {
     console.error("ログイン失敗", e);
@@ -2398,7 +2407,7 @@ updateUI();
 onAuthStateChanged(auth, async(user)=>{
   if(user){
     console.log(user.displayName);
-    //await loadUserData();
+    await loadUserData();
   }
 })
 </script>
