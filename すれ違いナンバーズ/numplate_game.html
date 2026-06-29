@@ -1338,14 +1338,14 @@ async function saveState() {
   localStorage.setItem('nb_collected', JSON.stringify([...collected]));
   localStorage.setItem('nb_log', JSON.stringify(logEntries.slice(0,50)));
   
-  if (!auth.currentUser) return;
-  
-  await setDoc(doc(db,"users",auth.currentUser.uid),{
-
-      collected:[...collected],
-      logEntries:logEntries,
-
-  },{merge:true});
+  if (!window.auth.currentUser) return;
+  const snap =await window.getDoc(
+    window.doc(
+      window.db,
+      "users",
+      window.auth.currentUser.uid
+    )
+  );
 }
 
 async function saveBingoState() {
@@ -1398,23 +1398,18 @@ async function loadUserData() {
 }
 
 async function googleLogin() {
-  try {
-    const result = await signInWithPopup(auth, provider);
-
-    console.log("ログイン成功");
-    console.log("UID:", result.user.uid);
-    console.log("名前:", result.user.displayName);
-    console.log("メール:", result.user.email);
-
-  } catch (e) {
-    console.error("ログイン失敗", e);
-  }
+    try {
+        await window.signInWithPopup(
+            window.auth,
+            window.provider
+        );
+    } catch (e) {
+        console.error(e);
+    }
 }
 
-async function logout(){
-
-  await signOut(auth);
-
+async function logout() {
+    await window.signOut(window.auth);
 }
 
 function updateUI() {
@@ -2349,26 +2344,46 @@ let selectedAvatar = "😀";
 
 function openAccountModal(){
 
-  if (auth.currentUser) {
+    if (window.auth?.currentUser) {
+        updateAccountUI(window.auth.currentUser);
+    } else {
+        resetAccountUI();
+    }
 
-    document.getElementById('account-name').value =
-      auth.currentUser.displayName || '';
+    document.getElementById("account-modal")
+        .classList.add("show");
+}
 
-    document.getElementById('account-id').value =
-      auth.currentUser.email || '';
+function updateAccountUI(user){
 
-  } else {
+    document.getElementById("account-name").value =
+        user.displayName || "";
 
-    document.getElementById('account-name').value =
-      localStorage.getItem('nb_name') || '';
+    document.getElementById("account-id").value =
+        user.email || "";
 
-    document.getElementById('account-id').value =
-      localStorage.getItem('nb_id') || '';
+    const btn =
+        document.getElementById("google-login-btn");
 
-  }
+    btn.textContent = "ログアウト";
 
-  document.getElementById('account-modal')
-    .classList.add('show');
+    btn.onclick = logout;
+
+}
+
+function resetAccountUI(){
+
+    document.getElementById("account-name").value = "";
+
+    document.getElementById("account-id").value = "";
+
+    const btn =
+        document.getElementById("google-login-btn");
+
+    btn.textContent = "Googleでログイン";
+
+    btn.onclick = googleLogin;
+
 }
 
 function selectAvatar(el){
@@ -2439,21 +2454,23 @@ selectTeam(currentTeam);
 updateUI();
 window.addEventListener("load", () => {
 
-    console.log("window load");
-
     window.onAuthStateChanged(window.auth, async (user) => {
 
-        console.log("認証状態が変わりました");
+        console.log("認証状態変更");
 
         if (user) {
 
             console.log("ログイン中");
-            console.log(user.displayName);
-            console.log(user.email);
+
+            await loadUserData();
+
+            updateAccountUI(user);
 
         } else {
 
-            console.log("ログアウトしています");
+            console.log("ログアウト");
+
+            resetAccountUI();
 
         }
 
