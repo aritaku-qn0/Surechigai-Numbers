@@ -1216,37 +1216,9 @@ main {
 <script src="pref_spots.js"></script>
 <script src="pref_food.js"></script>
 <script src="pref_neighbors.js"></script>
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+<script type="module" src="firebase.js"></script>
+<script>
 
-  import {
-    getAuth,
-    GoogleAuthProvider,
-    signInWithPopup,
-    signOut,
-    onAuthStateChanged
-  } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
-
-  import {
-    getFirestore,
-    doc,
-    getDoc,
-    setDoc
-  } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyDDHkY0j2G0jGyimRTrUr3CpArDHc5hQ98",
-    authDomain: "surechigai-numbers.firebaseapp.com",
-    projectId: "surechigai-numbers",
-    storageBucket: "surechigai-numbers.firebasestorage.app",
-    messagingSenderId: "1049904814367",
-    appId: "1:1049904814367:web:54203af0eff830c4a9382a"
-  };
-  
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = getFirestore(app);
-  const provider = new GoogleAuthProvider();
 // ===== DATA =====
 const PREFS = [
   {id:"01",name:"北海道"},{id:"02",name:"青森"},{id:"03",name:"岩手"},{id:"04",name:"宮城"},{id:"05",name:"秋田"},
@@ -2301,14 +2273,10 @@ function switchTab(name, btn) {
   if(btn) btn.classList.add('active');
 }
 
-window.switchTab = switchTab;
-
 function toggleMenu() {
   document.getElementById('header-menu')
     .classList.toggle('show');
 }
-
-window.toggleMenu = toggleMenu;
 
 function showComingSoon(name) {
   document.getElementById('header-menu')
@@ -2436,5 +2404,6 @@ onAuthStateChanged(auth, async(user)=>{
   }
 })
 </script>
+<script type="module" src="firebase.js"></script>
 </body>
 </html>
