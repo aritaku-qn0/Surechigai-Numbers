@@ -910,11 +910,77 @@ main {
   background:#d8f3dc;
 }
 
+/* TITLE SCREEN */
+
+#title-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  background:
+    linear-gradient(
+      rgba(245,240,232,0.9),
+      rgba(245,240,232,0.9)
+    ),
+    url("背景画像") center/cover;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.title-content {
+  text-align: center;
+}
+
+.title-content h1 {
+  font-family: 'Noto Serif JP', serif;
+  font-size: 2.5rem;
+  font-weight: 900;
+  margin-bottom: 10px;
+}
+
+.title-content p {
+  color: var(--muted);
+  margin-bottom: 40px;
+}
+
+.start-btn {
+  width: 220px;
+  padding: 16px;
+  font-size: 1.1rem;
+}
+
 </style>
 
 </head>
 
 <body>
+
+<div id="title-screen">
+
+  <div class="title-content">
+
+    <h1>
+      🗾<br>
+      Surechigai Numbers
+    </h1>
+
+    <p>
+      ナンバープレート収集ゲーム
+    </p>
+
+
+    <button 
+      class="btn primary start-btn"
+      onclick="startGame()">
+
+      ゲームスタート
+
+    </button>
+
+  </div>
+
+</div>
 
 <header>
   <div class="logo" onclick="toggleMenu()">
@@ -951,7 +1017,7 @@ main {
 
 </div>
 
-<main id="main-page" class="page-view active">
+<main id="main-page" class="page-view">
   <!-- LEFT: MAP -->
   <div class="map-panel">
     <div class="map-title-bar">
@@ -1152,39 +1218,37 @@ main {
 </div>
 
 <div class="modal-overlay" id="account-modal">
+
   <div class="modal-box">
-    <div class="modal-icon">👤</div>
+
+    <div class="modal-icon">
+      👤
+    </div>
+
 
     <h2>アカウント設定</h2>
 
+
     <input
-      type="text"
       id="account-name"
+      type="text"
       placeholder="名前"
       style="
-        width:100%;
-        padding:10px;
-        margin:10px 0;
-        border-radius:8px;
-        border:1px solid #ccc;
+      width:100%;
+      padding:10px;
+      margin:10px 0;
+      border-radius:8px;
+      border:1px solid #ccc;
       "
     >
 
-    <input
-      type="text"
-      id="account-id"
-      placeholder="メールアドレス"
-      style="
-        width:100%;
-        padding:10px;
-        margin:10px 0;
-        border-radius:8px;
-        border:1px solid #ccc;
-      "
-    >
 
-    <div style="margin:15px 0;">
-      <div>アイコン</div>
+    <div style="margin:15px 0">
+
+      <div>
+        アイコン
+      </div>
+
 
       <div style="
         display:flex;
@@ -1192,20 +1256,66 @@ main {
         justify-content:center;
         margin-top:10px;
       ">
+
         <span onclick="selectAvatar(this)" class="avatar-option">😀</span>
+
         <span onclick="selectAvatar(this)" class="avatar-option">😎</span>
+
         <span onclick="selectAvatar(this)" class="avatar-option">🤠</span>
+
         <span onclick="selectAvatar(this)" class="avatar-option">👧</span>
+
         <span onclick="selectAvatar(this)" class="avatar-option">🧑</span>
+
+
       </div>
+
     </div>
 
+
+
     <div class="modal-btn-wrap">
-      <button id="google-login-btn"class="btn primary"onclick="googleLogin()">
-        Googleでログイン
+
+      <button 
+      class="btn primary"
+      onclick="saveAccountSetting()">
+
+      保存
+
       </button>
+
     </div>
+
+
+
+    <div style="margin-top:15px">
+
+      <button
+      class="btn"
+      onclick="logout()">
+
+      ログアウト
+
+      </button>
+
+
+    </div>
+
+
+
+    <div style="margin-top:15px">
+
+      <button
+      class="btn"
+      style="color:red"
+      onclick="alert('準備中')">
+      アカウント削除
+    </button>
+  
   </div>
+
+  </div>
+
 </div>
 
 <style>
@@ -1340,16 +1450,81 @@ let mapGeo = null;
 let stream = null;
 let prefInfoCache = {};
 
-if(!isValidBingoCard(bingoCard)){
+if (!isValidBingoCard(bingoCard)) {
   bingoCard = createBingoCard();
-  bingoMarked = new Set(['FREE']);
-  saveState();
+  bingoMarked = new Set(["FREE"]);
 } else {
-  bingoMarked.add('FREE');
-  saveState();
+  bingoMarked.add("FREE");
 }
 
 // ===== INIT =====
+function startGame(){
+
+  // タイトルを消す
+  document
+    .getElementById("title-screen")
+    .style.display = "none";
+
+
+  // アカウント設定モーダルを表示
+  document
+    .getElementById("account-modal")
+    .classList.add("show");
+
+
+}
+
+let selectedAvatar = "😀";
+
+function selectAvatar(el){
+
+  document
+  .querySelectorAll(".avatar-option")
+  .forEach(x=>{
+    x.classList.remove("selected");
+  });
+
+
+  el.classList.add("selected");
+
+
+  selectedAvatar = el.textContent;
+
+}
+
+
+
+async function saveAccountSetting(){
+
+  const user = currentUser();
+
+  if(!user) return;
+
+
+  await setDoc(
+    doc(db,"users",user.uid),
+    {
+
+      displayName:
+      document.getElementById("account-name").value,
+
+      avatar:selectedAvatar
+
+    },
+
+    {
+      merge:true
+    }
+
+  );
+
+
+  document
+  .getElementById("account-modal")
+  .classList.remove("show");
+
+
+}
 
 async function googleLogin() {
 
@@ -1359,6 +1534,24 @@ async function googleLogin() {
             window.auth,
             window.provider
         );
+
+
+        // ログイン成功
+
+        document
+        .getElementById("account-modal")
+        .classList.remove("show");
+
+
+        document
+        .getElementById("main-page")
+        .classList.add("active");
+
+
+        await loadUserData();
+
+        updateUI();
+
 
     } catch (e) {
 
@@ -2340,8 +2533,6 @@ document.getElementById('coming-soon-modal').addEventListener('click', function(
 
 });
 
-let selectedAvatar = "😀";
-
 function openAccountModal(){
 
     if (window.auth?.currentUser) {
@@ -2361,25 +2552,13 @@ function updateAccountUI(user) {
 
     document.getElementById("account-id").value =
         user.email || "";
-
-    const btn =
-        document.getElementById("google-login-btn");
-
-    btn.textContent = "ログアウト";
-    btn.onclick = logout;
-
+        
 }
 
 function resetAccountUI() {
 
     document.getElementById("account-name").value = "";
     document.getElementById("account-id").value = "";
-
-    const btn =
-        document.getElementById("google-login-btn");
-
-    btn.textContent = "Googleでログイン";
-    btn.onclick = googleLogin;
 
 }
 
