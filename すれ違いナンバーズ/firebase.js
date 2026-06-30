@@ -15,7 +15,8 @@ import {
   doc,
   getDoc,
   setDoc,
-  deleteDoc
+  deleteDoc,
+  runTransaction
 } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -40,6 +41,7 @@ window.doc = doc;
 window.getDoc = getDoc;
 window.setDoc = setDoc;
 window.deleteDoc = deleteDoc;
+window.runTransaction = runTransaction;
 window.deleteUser = deleteUser;
 window.reauthenticateWithPopup = reauthenticateWithPopup;
 
