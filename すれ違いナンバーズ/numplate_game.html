@@ -1467,19 +1467,45 @@ async function loadUserData() {
     );
 
     if (!snap.exists()) {
+      const guestCollected = JSON.parse(localStorage.getItem("nb_collected") || "[]");
+      const guestLog = JSON.parse(localStorage.getItem("nb_log") || "[]");
+      const guestBingo = JSON.parse(localStorage.getItem("nb_bingo_card") || "null");
       const hasGuestData =
-      collected.size > 0 ||
-      logEntries.length > 0 ||
-      bingoCard !== null;
+      guestCollected.length > 0 ||
+      guestLog.length > 0 ||
+      guestBingo !== null;
       
       if (hasGuestData) {
         const transfer = await waitForTransferChoice();
         
         if (transfer) {
-          // 「引き継ぐ」
+          // localStorageから読み込んだゲストデータを使用
+          collected = new Set(guestCollected);
+          logEntries = guestLog;
+          bingoCard = guestBingo;
+          bingoMarked = new Set(
+            JSON.parse(localStorage.getItem("nb_bingo_marked") || '["FREE"]')
+          );
+          territoryCounts = JSON.parse(
+            localStorage.getItem("nb_territory_counts") || "{}"
+          );
+          neighborMissions = JSON.parse(
+            localStorage.getItem("nb_neighbor_mission") || "[]"
+          );
+          currentTeam =
+          localStorage.getItem("nb_current_team") || "a";
           await saveState();
         } else {
-          // 「新しく始める」
+          // ゲストデータを削除
+          localStorage.removeItem("nb_collected");
+          localStorage.removeItem("nb_log");
+          localStorage.removeItem("nb_bingo_card");
+          localStorage.removeItem("nb_bingo_marked");
+          localStorage.removeItem("nb_territory_counts");
+          localStorage.removeItem("nb_current_team");
+          localStorage.removeItem("nb_neighbor_mission");
+          
+          // 新規データを作成
           collected = new Set();
           logEntries = [];
           bingoCard = createBingoCard();
