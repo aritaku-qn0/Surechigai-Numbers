@@ -1991,6 +1991,7 @@ async function captureAndAnalyze() {
       showResult('error','ナンバープレートが見つかりませんでした');
     }
   } catch(e) {
+    console.error(e);
     document.getElementById('scan-overlay').style.display='none';
     document.getElementById('analyzing-box').className='analyzing-box';
     document.getElementById('btn-capture').disabled=false;
