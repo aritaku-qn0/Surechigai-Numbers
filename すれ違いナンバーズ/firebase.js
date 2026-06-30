@@ -14,7 +14,9 @@ import {
   getFirestore,
   doc,
   getDoc,
+  getDocs,
   setDoc,
+  updateDoc,
   deleteDoc,
   runTransaction,
   onSnapshot,
@@ -41,7 +43,9 @@ window.signOut = signOut;
 window.onAuthStateChanged = onAuthStateChanged;
 window.doc = doc;
 window.getDoc = getDoc;
+window.getDocs = getDocs;
 window.setDoc = setDoc;
+window.updateDoc = updateDoc;
 window.deleteDoc = deleteDoc;
 window.runTransaction = runTransaction;
 window.deleteUser = deleteUser;
