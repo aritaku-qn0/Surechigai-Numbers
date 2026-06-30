@@ -2220,6 +2220,8 @@ async function assignTeamAutomatically() {
 
     const data = snap.data();
 
+    console.log("teamCounts", data);
+
     const teams = [
     { id: "a", count: data.a },
     { id: "b", count: data.b },
@@ -2238,6 +2240,8 @@ async function assignTeamAutomatically() {
     transaction.update(teamRef, {
       [currentTeam]: data[currentTeam] + 1
     });
+
+    console.log("更新するチーム", currentTeam);
 
     transaction.set(
       userRef,
