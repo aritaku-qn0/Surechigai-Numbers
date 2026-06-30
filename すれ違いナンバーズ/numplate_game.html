@@ -1330,26 +1330,6 @@ main {
 <script>
 console.log("HTMLのscript開始");
 
-document.getElementById("transfer-yes").onclick = () => {
-
-    hideGuestTransferModal();
-
-    if (transferResolve) {
-        transferResolve(true);
-    }
-
-};
-
-document.getElementById("transfer-no").onclick = () => {
-
-    hideGuestTransferModal();
-
-    if (transferResolve) {
-        transferResolve(false);
-    }
-
-};
-
 function currentUser() {
     return window.auth?.currentUser ?? null;
 }
@@ -1603,6 +1583,83 @@ function updateUI() {
   updateTerritoryMapColors();
   renderTerritoryScores();
   renderBingo();
+}
+
+// Firestoreへゲームデータ保存
+async function saveState() {
+
+  const user = currentUser();
+
+  if (!user) return;
+
+  try {
+
+    await setDoc(
+      doc(db, "users", user.uid),
+      {
+
+        collected: [...collected],
+        logEntries,
+        bingoCard,
+        bingoMarked: [...bingoMarked],
+        territoryCounts,
+        currentTeam,
+        neighborMissions
+
+      },
+
+      {
+        merge: true
+      }
+    );
+
+  } catch (e) {
+
+    console.error("saveState", e);
+
+  }
+
+}
+
+// Firestoreからゲームデータ読込
+async function loadUserData() {
+
+  const user = currentUser();
+
+  if (!user) return;
+
+  try {
+
+    const snap = await getDoc(
+      doc(db, "users", user.uid)
+    );
+
+    if (!snap.exists()) return;
+
+    const data = snap.data();
+
+    collected = new Set(data.collected || []);
+
+    logEntries = data.logEntries || [];
+
+    bingoCard = data.bingoCard || createBingoCard();
+
+    bingoMarked = new Set(data.bingoMarked || ["FREE"]);
+
+    territoryCounts = data.territoryCounts || {};
+
+    currentTeam = data.currentTeam || "a";
+
+    neighborMissions = data.neighborMissions || [];
+
+  }
+
+  catch (e) {
+
+    console.error("loadUserData", e);
+
+  }
+
 }
 
 // ===== MAP =====
@@ -2552,12 +2609,14 @@ function updateAccountUI(user) {
 
     document.getElementById("account-id").value =
         user.email || "";
-        
+
 }
+
 
 function resetAccountUI() {
 
     document.getElementById("account-name").value = "";
+
     document.getElementById("account-id").value = "";
 
 }
