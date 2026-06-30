@@ -1040,6 +1040,17 @@ main {
 </div>
 
 <main id="main-page" class="page-view">
+  
+  <button
+  onclick="initializeTerritories()"
+  style="
+  position:fixed;
+  right:20px;
+  bottom:20px;
+  z-index:9999;
+  ">
+  territories初期化
+</button>
   <!-- LEFT: MAP -->
   <div class="map-panel">
     <div class="map-title-bar">
@@ -1485,7 +1496,28 @@ function selectAvatar(el){
 
 }
 
+//仮のやつうううう
+async function initializeTerritories() {
 
+    if (!confirm("territoriesを初期化しますか？")) return;
+
+    for (let pref of PREFS) {
+
+        await window.setDoc(
+            window.doc(window.db, "territories", pref.id),
+            {
+                a: 0,
+                b: 0,
+                c: 0,
+                d: 0
+            }
+        );
+
+        console.log(pref.id + " 作成");
+    }
+
+    alert("47都道府県の初期化が完了しました！");
+}
 
 async function saveAccountSetting() {
 
