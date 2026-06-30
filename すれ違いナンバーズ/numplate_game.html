@@ -1532,6 +1532,10 @@ async function logout() {
 }
 
 function updateUI() {
+  console.log("updateUI", collected.size);
+  document.querySelectorAll(".pref-path").forEach(el=>{
+    console.log(el.dataset.id, collected.has(el.dataset.id));
+  });
   const n = collected.size;
   document.getElementById('collected-label').textContent = n + ' / 47';
   document.getElementById('hdr-count').textContent = n;
@@ -1934,6 +1938,8 @@ async function captureAndAnalyze() {
         } else {
           const prevMissions = completedMissionCount();
           collected.add(pref.id);
+          console.log(collected);
+          console.log(collected.size);
           neighborMissions.forEach(m => {
             if(m.target === pref.name){
               m.completed = true;
