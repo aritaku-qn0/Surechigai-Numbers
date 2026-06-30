@@ -1596,21 +1596,31 @@ async function deleteAccount() {
 
     try {
 
-        // Firestoreのデータを削除
+        // Googleで再認証
+        await window.reauthenticateWithPopup(
+            user,
+            window.provider
+        );
+
+        // Firestore削除
         await window.deleteDoc(
             window.doc(window.db, "users", user.uid)
         );
 
-        // 確認ダイアログを閉じる
+        // Authentication削除
+        await window.deleteUser(user);
+
         closeDeleteAccountModal();
 
-        // ログアウト
+        alert("アカウントを削除しました。");
+
         await logout();
 
     } catch (e) {
 
         console.error(e);
-        alert("削除に失敗しました");
+
+        alert("削除できませんでした\n" + e.message);
 
     }
 
