@@ -1470,6 +1470,9 @@ function selectAvatar(el){
 
 async function saveAccountSetting() {
 
+  console.log(window.doc);
+  console.log(window.db);
+
   console.log("保存ボタンが押された");
 
   const user = currentUser();
@@ -1483,8 +1486,8 @@ async function saveAccountSetting() {
 
   try {
 
-    await setDoc(
-      doc(db, "users", user.uid),
+    await window.setDoc(
+      window.doc(window.db, "users", user.uid),
       {
         displayName: document.getElementById("account-name").value,
         avatar: selectedAvatar
@@ -1589,8 +1592,8 @@ async function saveState() {
 
   try {
 
-    await setDoc(
-      doc(db, "users", user.uid),
+    await window.setDoc(
+      window.doc(window.db, "users", user.uid),
       {
 
         collected: [...collected],
