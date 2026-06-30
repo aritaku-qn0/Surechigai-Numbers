@@ -2254,6 +2254,79 @@ async function initializeTerritories() {
   alert("territoriesを初期化しました！");
 }
 
+async function reshuffleAllTeams() {
+
+    if (!confirm("全ユーザーのチームを再抽選しますか？")) return;
+
+    try {
+
+        const usersSnap = await window.getDocs(
+
+            window.collection(window.db, "users")
+
+        );
+
+        const teamCounts = {
+
+            a: 0,
+            b: 0,
+            c: 0,
+            d: 0
+
+        };
+
+        for (const userDoc of usersSnap.docs) {
+
+            const min = Math.min(...Object.values(teamCounts));
+
+            const candidates = Object.keys(teamCounts).filter(
+
+                team => teamCounts[team] === min
+
+            );
+
+            const team = candidates[
+
+                Math.floor(Math.random() * candidates.length)
+
+            ];
+
+            teamCounts[team]++;
+
+            await window.updateDoc(
+
+                window.doc(window.db, "users", userDoc.id),
+
+                {
+
+                    currentTeam: team
+
+                }
+
+            );
+
+        }
+
+        await window.setDoc(
+
+            window.doc(window.db, "system", "teamCounts"),
+
+            teamCounts
+
+        );
+
+        alert("全ユーザーのチームを再抽選しました。");
+
+    } catch (error) {
+
+        console.error(error);
+
+        alert("再抽選に失敗しました。");
+
+    }
+
+}
+
 async function assignTeamAutomatically() {
 
   const user = currentUser();
@@ -3126,7 +3199,7 @@ border-radius:10px;
 
 <button onclick="initializeTerritories()">territories初期化</button><br><br>
 
-<button onclick="assignTeamAutomatically()">チーム再抽選</button>
+<button onclick="reshuffleAllTeams()">全ユーザー再抽選</button>
 
 </details>
 
