@@ -1438,19 +1438,13 @@ if (!isValidBingoCard(bingoCard)) {
 }
 
 // ===== INIT =====
-function startGame(){
+async function startGame() {
 
-  // タイトルを消す
-  document
-    .getElementById("title-screen")
-    .style.display = "none";
+  console.log("startGame");
 
+  document.getElementById("title-screen").style.display = "none";
 
-  // アカウント設定モーダルを表示
-  document
-    .getElementById("account-modal")
-    .classList.add("show");
-
+  await googleLogin();
 
 }
 
@@ -1474,70 +1468,71 @@ function selectAvatar(el){
 
 
 
-async function saveAccountSetting(){
+async function saveAccountSetting() {
+
+  console.log("保存ボタンが押された");
 
   const user = currentUser();
 
-  if(!user) return;
+  console.log(user);
 
+  if (!user) {
+    alert("ログインしていません");
+    return;
+  }
 
-  await setDoc(
-    doc(db,"users",user.uid),
-    {
+  try {
 
-      displayName:
-      document.getElementById("account-name").value,
+    await setDoc(
+      doc(db, "users", user.uid),
+      {
+        displayName: document.getElementById("account-name").value,
+        avatar: selectedAvatar
+      },
+      {
+        merge: true
+      }
+    );
 
-      avatar:selectedAvatar
+    alert("保存しました");
 
-    },
+    document
+      .getElementById("account-modal")
+      .classList.remove("show");
 
-    {
-      merge:true
-    }
+  } catch (e) {
 
-  );
+    console.error(e);
+    alert(e.message);
 
-
-  document
-  .getElementById("account-modal")
-  .classList.remove("show");
-
+  }
 
 }
 
 async function googleLogin() {
 
-    try {
+  console.log("googleLogin開始");
 
-        await window.signInWithPopup(
-            window.auth,
-            window.provider
-        );
+  try {
 
+    await window.signInWithPopup(
+      window.auth,
+      window.provider
+    );
 
-        // ログイン成功
+    await loadUserData();
 
-        document
-        .getElementById("account-modal")
-        .classList.remove("show");
+    updateUI();
 
+    document
+      .getElementById("main-page")
+      .classList.add("active");
 
-        document
-        .getElementById("main-page")
-        .classList.add("active");
+  } catch (e) {
 
+    console.error(e);
 
-        await loadUserData();
-
-        updateUI();
-
-
-    } catch (e) {
-
-        console.error(e);
-
-    }
+  }
 
 }
 
@@ -2604,20 +2599,21 @@ function openAccountModal(){
 
 function updateAccountUI(user) {
 
-    document.getElementById("account-name").value =
-        user.displayName || "";
+  const name = document.getElementById("account-name");
 
-    document.getElementById("account-id").value =
-        user.email || "";
+  if (name) {
+    name.value = user.displayName || "";
+  }
 
 }
 
-
 function resetAccountUI() {
 
-    document.getElementById("account-name").value = "";
+  const name = document.getElementById("account-name");
 
-    document.getElementById("account-id").value = "";
+  if (name) {
+    name.value = "";
+  }
 
 }
 
@@ -2635,24 +2631,14 @@ function selectAvatar(el){
 function saveAccount(){
 
   const name =
-    document.getElementById('account-name').value.trim();
+  document.getElementById('account-name').value.trim();
 
-  const id =
-    document.getElementById('account-id').value.trim();
-
-  // 入力チェック
-  if(!name){
+  if (!name) {
     alert('名前を入力してください');
     return;
   }
 
-  if(!id){
-    alert('IDを入力してください');
-    return;
-  }
-
   localStorage.setItem('nb_name', name);
-  localStorage.setItem('nb_id', id);
   localStorage.setItem('nb_avatar', selectedAvatar);
 
   alert('保存しました！');
