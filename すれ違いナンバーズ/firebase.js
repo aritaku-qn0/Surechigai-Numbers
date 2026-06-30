@@ -40,3 +40,8 @@ window.doc = doc;
 window.getDoc = getDoc;
 window.setDoc = setDoc;
 window.deleteDoc = deleteDoc;
+window.deleteUser = deleteUser;
+window.reauthenticateWithPopup = reauthenticateWithPopup;
+
+console.log("deleteUser =", deleteUser);
+console.log("reauthenticateWithPopup =", reauthenticateWithPopup);
