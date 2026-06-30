@@ -1967,7 +1967,7 @@ async function captureAndAnalyze() {
             }
           });
           const newMission =
-          createNeighborMissions(pref.name);
+          await createNeighborMissions(pref.name);
           renderNeighborMissions();
           if(newMission){
             showToast(
@@ -2193,7 +2193,7 @@ function checkMissions(prevCount) {
   }
 }
 
-function createNeighborMissions(prefName){
+async function createNeighborMissions(prefName){
 
   const neighbors = PREF_NEIGHBORS[prefName];
   if(!neighbors) return;
@@ -2216,9 +2216,19 @@ function createNeighborMissions(prefName){
 
   neighborMissions.unshift(mission);
 
-  setDoc(doc(db,"users",auth.currentUser.uid),{
-    neighborMissions
-  },{merge:true});
+  const user = currentUser();
+
+  if (user) {
+    await window.setDoc(
+      window.doc(window.db, "users", user.uid),
+      {
+        neighborMissions
+      },
+      {
+        merge: true
+      }
+    );
+  }
 
   return mission;
 }
