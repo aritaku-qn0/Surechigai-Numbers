@@ -1330,14 +1330,11 @@ main {
       <button
       class="btn"
       style="color:red"
-      onclick="alert('準備中')">
+      onclick="openDeleteAccountModal()">
       アカウント削除
     </button>
-  
+    </div>
   </div>
-
-  </div>
-
 </div>
 
 <style>
@@ -1573,6 +1570,50 @@ async function logout() {
     document.getElementById("title-screen").style.display = "flex";
 
     document.getElementById("account-modal").classList.remove("show");
+}
+
+function openDeleteAccountModal(){
+
+    document
+        .getElementById("delete-account-modal")
+        .classList.add("show");
+
+}
+
+function closeDeleteAccountModal(){
+
+    document
+        .getElementById("delete-account-modal")
+        .classList.remove("show");
+
+}
+
+async function deleteAccount() {
+
+    const user = currentUser();
+
+    if (!user) return;
+
+    try {
+
+        // Firestoreのデータを削除
+        await window.deleteDoc(
+            window.doc(window.db, "users", user.uid)
+        );
+
+        // 確認ダイアログを閉じる
+        closeDeleteAccountModal();
+
+        // ログアウト
+        await logout();
+
+    } catch (e) {
+
+        console.error(e);
+        alert("削除に失敗しました");
+
+    }
+
 }
 
 function updateProfileHeader() {
@@ -2748,5 +2789,44 @@ window.addEventListener("load", () => {
 });
 </script>
 <script type="module" src="firebase.js"></script>
+<div class="modal-overlay" id="delete-account-modal">
+
+  <div class="modal-box">
+
+    <div class="modal-icon">
+      ⚠️
+    </div>
+
+    <h2>アカウント削除</h2>
+
+    <p>
+      アカウントを削除すると、<br>
+      収集データ・ビンゴ・ミッションなど<br>
+      すべてのデータが削除されます。<br><br>
+
+      この操作は取り消せません。
+    </p>
+
+    <div class="btn-row">
+
+      <button class="btn"
+        onclick="closeDeleteAccountModal()">
+        キャンセル
+      </button>
+
+      <button
+        class="btn primary"
+        style="background:#c0392b;border-color:#c0392b"
+        onclick="deleteAccount()">
+
+        削除する
+
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
 </body>
 </html>

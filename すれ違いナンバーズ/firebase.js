@@ -6,12 +6,17 @@ import {
   signOut,
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
+
 import {
   getFirestore,
   doc,
   getDoc,
   setDoc
 } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+
+import {
+    deleteDoc
+} from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDDHkY0j2G0jGyimRTrUr3CpArDHc5hQ98",
@@ -34,3 +39,4 @@ window.onAuthStateChanged = onAuthStateChanged;
 window.doc = doc;
 window.getDoc = getDoc;
 window.setDoc = setDoc;
+window.deleteDoc = deleteDoc;
