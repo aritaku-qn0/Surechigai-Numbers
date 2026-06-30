@@ -1590,8 +1590,6 @@ function closeDeleteAccountModal(){
 
 async function deleteAccount() {
 
-  console.log(window.reauthenticateWithPopup);
-
     const user = currentUser();
 
     if (!user) return;
@@ -1604,25 +1602,34 @@ async function deleteAccount() {
             window.provider
         );
 
+        console.log("再認証OK");
+
         // Firestore削除
         await window.deleteDoc(
             window.doc(window.db, "users", user.uid)
         );
 
+        console.log("Firestore削除OK");
+
         // Authentication削除
         await window.deleteUser(user);
+
+        console.log("Authentication削除OK");
 
         closeDeleteAccountModal();
 
         alert("アカウントを削除しました。");
 
-        await logout();
+        // タイトル画面へ戻す
+        document.getElementById("title-screen").style.display = "flex";
+
+        document.getElementById("main-page").classList.remove("active");
+        document.getElementById("territory-page").classList.remove("active");
 
     } catch (e) {
 
         console.error(e);
-
-        alert("削除できませんでした\n" + e.message);
+        alert("削除できませんでした\n" + e.code + "\n" + e.message);
 
     }
 
