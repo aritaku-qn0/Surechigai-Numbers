@@ -1586,6 +1586,8 @@ function updateUI() {
 // Firestoreへゲームデータ保存
 async function saveState() {
 
+  console.log("saveState実行");
+
   const user = currentUser();
 
   if (!user) return;
@@ -1628,8 +1630,8 @@ async function loadUserData() {
 
   try {
 
-    const snap = await getDoc(
-      doc(db, "users", user.uid)
+    const snap = await window.getDoc(
+      window.doc(window.db, "users", user.uid)
     );
 
     if (!snap.exists()) return;
