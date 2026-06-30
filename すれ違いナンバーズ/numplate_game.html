@@ -1533,8 +1533,20 @@ async function logout() {
 
 function updateUI() {
   console.log("updateUI", collected.size);
-  document.querySelectorAll(".pref-path").forEach(el=>{
-    console.log(el.dataset.id, collected.has(el.dataset.id));
+  document.querySelectorAll(".pref-path").forEach(el => {
+      const id = el.dataset.id;
+      console.log(
+          "map",
+          id,
+          typeof id,
+          collected.has(id),
+          [...collected]
+      );
+
+      if (collected.has(id))
+          el.classList.add("collected");
+      else
+          el.classList.remove("collected");
   });
   const n = collected.size;
   document.getElementById('collected-label').textContent = n + ' / 47';
