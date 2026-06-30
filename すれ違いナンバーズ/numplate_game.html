@@ -1040,17 +1040,7 @@ main {
 </div>
 
 <main id="main-page" class="page-view">
-  
-  <button
-  onclick="initializeTerritories()"
-  style="
-  position:fixed;
-  right:20px;
-  bottom:20px;
-  z-index:9999;
-  ">
-  territories初期化
-</button>
+
   <!-- LEFT: MAP -->
   <div class="map-panel">
     <div class="map-title-bar">
@@ -1496,29 +1486,6 @@ function selectAvatar(el){
 
 }
 
-//仮のやつうううう
-async function initializeTerritories() {
-
-    if (!confirm("territoriesを初期化しますか？")) return;
-
-    for (let pref of PREFS) {
-
-        await window.setDoc(
-            window.doc(window.db, "territories", pref.id),
-            {
-                a: 0,
-                b: 0,
-                c: 0,
-                d: 0
-            }
-        );
-
-        console.log(pref.id + " 作成");
-    }
-
-    alert("47都道府県の初期化が完了しました！");
-}
-
 async function saveAccountSetting() {
 
   console.log(window.doc);
@@ -1581,6 +1548,8 @@ async function googleLogin() {
     updateUI();
     
     loadTeamCounts(); 
+    
+    listenTerritories();
     
     document
       .getElementById("main-page")
@@ -1986,12 +1955,32 @@ function teamClass(team) {
   return team ? 'team-' + team : 'neutral';
 }
 
-function addTerritoryPoint(prefId, team) {
-  if(!territoryCounts[prefId]) territoryCounts[prefId] = {a:0,b:0,c:0,d:0};
-  territoryCounts[prefId][team] = (territoryCounts[prefId][team] || 0) + 1;
-  saveState();
-  updateTerritoryMapColors();
-  renderTerritoryScores();
+async function addTerritoryPoint(prefId, team) {
+
+    const ref = window.doc(window.db, "territories", prefId);
+
+    await window.runTransaction(window.db, async (transaction) => {
+
+        const snap = await transaction.get(ref);
+
+        if (!snap.exists()) {
+            transaction.set(ref, {
+                a: 0,
+                b: 0,
+                c: 0,
+                d: 0
+            });
+            return;
+        }
+
+        const data = snap.data();
+
+        transaction.update(ref, {
+            [team]: (data[team] || 0) + 1
+        });
+
+    });
+
 }
 
 function buildTerritoryMap(geo) {
@@ -2159,6 +2148,25 @@ function loadTeamCounts() {
         document.getElementById("team-count-b").textContent = data.b;
         document.getElementById("team-count-c").textContent = data.c;
         document.getElementById("team-count-d").textContent = data.d;
+
+    });
+
+}
+
+function listenTerritories() {
+
+    const ref = window.collection(window.db, "territories");
+
+    window.onSnapshot(ref, (snapshot) => {
+
+        territoryCounts = {};
+
+        snapshot.forEach((doc) => {
+            territoryCounts[doc.id] = doc.data();
+        });
+
+        updateTerritoryMapColors();
+        renderTerritoryScores();
 
     });
 

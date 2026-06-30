@@ -17,7 +17,8 @@ import {
   setDoc,
   deleteDoc,
   runTransaction,
-  onSnapshot
+  onSnapshot,
+  collection
 } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -46,6 +47,7 @@ window.runTransaction = runTransaction;
 window.deleteUser = deleteUser;
 window.reauthenticateWithPopup = reauthenticateWithPopup;
 window.onSnapshot = onSnapshot;
+window.collection = collection;
 
 console.log("deleteUser =", deleteUser);
 console.log("reauthenticateWithPopup =", reauthenticateWithPopup);
