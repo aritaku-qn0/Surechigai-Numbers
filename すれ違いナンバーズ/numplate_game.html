@@ -2981,20 +2981,55 @@ selectTeam(currentTeam);
 updateUI();
 window.addEventListener("load", () => {
 
+  const ADMIN_UID = "aritakusecond@gmail.com";
+
   window.onAuthStateChanged(window.auth, async (user) => {
     if (user) {
+      
       updateAccountUI(user);
       await loadUserData();
       await assignTeamAutomatically();
       updateUI();
+
+      // 管理者だけ開発メニュー表示
+      if (user.uid === ADMIN_UID) {
+          document.getElementById("dev-menu").style.display = "block";
+      }
+
     } else {
       resetAccountUI();
+      document.getElementById("dev-menu").style.display = "none";
     }
   });
 });
 </script>
 <script type="module" src="firebase.js"></script>
-<div class="modal-overlay" id="delete-account-modal">
+
+
+
+<div class="modal-overlay" id="delete-acc<details id="dev-menu" style="
+display:none;
+position:fixed;
+top:10px;
+right:10px;
+z-index:99999;
+background:white;
+padding:10px;
+border:1px solid #ccc;
+border-radius:10px;
+">
+
+<summary>🛠 開発者メニュー</summary>
+
+<button onclick="resetTerritories()">陣取りリセット</button><br><br>
+
+<button onclick="resetTeamCounts()">チーム人数リセット</button><br><br>
+
+<button onclick="initializeTerritories()">territories初期化</button><br><br>
+
+<button onclick="assignTeamAutomatically()">チーム再抽選</button>
+
+</details>ount-modal">
 
   <div class="modal-box">
 
