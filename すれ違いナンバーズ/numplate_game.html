@@ -1416,8 +1416,21 @@ async function saveState() {
 
     const user = currentUser();
 
-    if (!user) return;
+    // ゲストプレイ中は localStorage に保存
+    if (!user) {
 
+        localStorage.setItem("nb_collected", JSON.stringify([...collected]));
+        localStorage.setItem("nb_log", JSON.stringify(logEntries));
+        localStorage.setItem("nb_bingo_card", JSON.stringify(bingoCard));
+        localStorage.setItem("nb_bingo_marked", JSON.stringify([...bingoMarked]));
+        localStorage.setItem("nb_territory_counts", JSON.stringify(territoryCounts));
+        localStorage.setItem("nb_current_team", currentTeam);
+        localStorage.setItem("nb_neighbor_mission", JSON.stringify(neighborMissions));
+
+        return;
+    }
+
+    // ログイン中は Firestore に保存
     await window.setDoc(
 
         window.doc(
