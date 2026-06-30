@@ -1547,7 +1547,9 @@ async function googleLogin() {
     await loadUserData();
 
     updateUI();
-
+    
+    loadTeamCounts(); 
+    
     document
       .getElementById("main-page")
       .classList.add("active");
@@ -1605,6 +1607,22 @@ async function deleteAccount() {
         );
 
         console.log("再認証OK");
+
+        const teamRef = window.doc(window.db, "system", "teamCounts");
+        const userRef = window.doc(window.db, "users", user.uid);
+        await window.runTransaction(window.db, async (transaction) => {
+          const teamSnap = await transaction.get(teamRef);
+          const userSnap = await transaction.get(userRef);
+          if (!teamSnap.exists() || !userSnap.exists()) return;
+          const teamData = teamSnap.data();
+          const userData = userSnap.data();
+          const team = userData.currentTeam;
+          if (team && teamData[team] > 0) {
+            transaction.update(teamRef, {
+              [team]: teamData[team] - 1
+            });
+          }
+        });
 
         // Firestore削除
         await window.deleteDoc(
@@ -2081,9 +2099,37 @@ function renderTerritoryScores() {
   list.innerHTML = ['a','b','c','d'].map(team=>`
     <div class="territory-team-row">
       <span><span class="territory-dot team-${team}-bg"></span>${teamLabel(team)}</span>
-      <strong>${owned[team]}県</strong>
+      <div style="text-align:right">
+        <strong>${owned[team]}県</strong><br>
+        <small>
+          <span id="team-count-${team}">0</span>人
+        </small>
+      </div>
     </div>
   `).join('');
+}
+
+function loadTeamCounts() {
+
+    const ref = window.doc(
+        window.db,
+        "system",
+        "teamCounts"
+    );
+
+    window.onSnapshot(ref, (snap) => {
+
+        if (!snap.exists()) return;
+
+        const data = snap.data();
+
+        document.getElementById("team-count-a").textContent = data.a;
+        document.getElementById("team-count-b").textContent = data.b;
+        document.getElementById("team-count-c").textContent = data.c;
+        document.getElementById("team-count-d").textContent = data.d;
+
+    });
+
 }
 
 function showTerritoryDetail(prefId, prefName) {
@@ -2107,6 +2153,66 @@ function selectTeam(team) {
     btn.classList.toggle('team-c-bg', active && team === 'c');
     btn.classList.toggle('team-d-bg', active && team === 'd');
   });
+}
+
+async function assignTeamAutomatically() {
+
+  const user = currentUser();
+  if (!user) return;
+
+  const userRef = window.doc(window.db, "users", user.uid);
+  const userSnap = await window.getDoc(userRef);
+
+  // すでに所属している場合
+  if (userSnap.exists() && userSnap.data().currentTeam) {
+
+    currentTeam = userSnap.data().currentTeam;
+    renderMyTeam();
+    return;
+
+  }
+
+  const teamRef = window.doc(window.db, "system", "teamCounts");
+
+  await window.runTransaction(window.db, async (transaction) => {
+
+    const snap = await transaction.get(teamRef);
+
+    const data = snap.data();
+
+    const teams = [
+    { id: "a", count: data.a },
+    { id: "b", count: data.b },
+    { id: "c", count: data.c },
+    { id: "d", count: data.d }
+  ];
+  // 最少人数を調べる
+  const minCount = Math.min(...teams.map(t => t.count));
+  // 最少人数のチームだけ取り出す
+  const candidates = teams.filter(t => t.count === minCount);
+  // その中からランダムに1チーム選ぶ
+  const randomIndex = Math.floor(Math.random() * candidates.length);
+  
+  currentTeam = candidates[randomIndex].id;
+
+    transaction.update(teamRef, {
+      [currentTeam]: data[currentTeam] + 1
+    });
+
+    transaction.set(
+      userRef,
+      {
+        currentTeam
+      },
+      {
+        merge: true
+      }
+    );
+
+  });
+
+  renderMyTeam();
+
 }
 
 function renderMyTeam(){
@@ -2832,6 +2938,7 @@ window.addEventListener("load", () => {
     if (user) {
       updateAccountUI(user);
       await loadUserData();
+      await assignTeamAutomatically();
       updateUI();
     } else {
       resetAccountUI();
