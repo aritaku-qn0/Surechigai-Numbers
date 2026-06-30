@@ -3007,29 +3007,7 @@ window.addEventListener("load", () => {
 
 
 
-<div class="modal-overlay" id="delete-acc<details id="dev-menu" style="
-display:none;
-position:fixed;
-top:10px;
-right:10px;
-z-index:99999;
-background:white;
-padding:10px;
-border:1px solid #ccc;
-border-radius:10px;
-">
-
-<summary>🛠 開発者メニュー</summary>
-
-<button onclick="resetTerritories()">陣取りリセット</button><br><br>
-
-<button onclick="resetTeamCounts()">チーム人数リセット</button><br><br>
-
-<button onclick="initializeTerritories()">territories初期化</button><br><br>
-
-<button onclick="assignTeamAutomatically()">チーム再抽選</button>
-
-</details>ount-modal">
+<div class="modal-overlay" id="delete-account-modal">
 
   <div class="modal-box">
 
@@ -3068,5 +3046,30 @@ border-radius:10px;
   </div>
 
 </div>
+
+<details id="dev-menu" style="
+display:none;
+position:fixed;
+top:10px;
+right:10px;
+z-index:99999;
+background:white;
+padding:10px;
+border:1px solid #ccc;
+border-radius:10px;
+">
+
+<summary>🛠 開発者メニュー</summary>
+
+<button onclick="resetTerritories()">陣取りリセット</button><br><br>
+
+<button onclick="resetTeamCounts()">チーム人数リセット</button><br><br>
+
+<button onclick="initializeTerritories()">territories初期化</button><br><br>
+
+<button onclick="assignTeamAutomatically()">チーム再抽選</button>
+
+</details>
+
 </body>
 </html>
