@@ -1208,6 +1208,27 @@ main {
   </div>
 </div>
 
+<div class="modal-overlay" id="guest-transfer-modal">
+  <div class="modal-box">
+
+    <h2>データの引き継ぎ</h2>
+
+    <p>
+      ゲストプレイのデータが見つかりました。<br>
+      Googleアカウントへ引き継ぎますか？
+    </p>
+
+    <button id="transfer-yes" class="btn primary">
+      引き継ぐ
+    </button>
+
+    <button id="transfer-no" class="btn">
+      新しく始める
+    </button>
+
+  </div>
+</div>
+
 <style>
 @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
 </style>
@@ -1219,6 +1240,57 @@ main {
 <script type="module" src="firebase.js"></script>
 <script>
 console.log("HTMLのscript開始");
+
+function showGuestTransferModal() {
+
+  document
+    .getElementById("guest-transfer-modal")
+    .classList.add("show");
+
+}
+
+let transferResolve = null;
+
+function waitForTransferChoice() {
+
+    return new Promise(resolve => {
+
+        transferResolve = resolve;
+
+        showGuestTransferModal();
+
+    });
+
+}
+
+document.getElementById("transfer-yes").onclick = () => {
+
+    hideGuestTransferModal();
+
+    if (transferResolve) {
+        transferResolve(true);
+    }
+
+};
+
+document.getElementById("transfer-no").onclick = () => {
+
+    hideGuestTransferModal();
+
+    if (transferResolve) {
+        transferResolve(false);
+    }
+
+};
+
+function hideGuestTransferModal() {
+
+  document
+    .getElementById("guest-transfer-modal")
+    .classList.remove("show");
+
+}
+
 function currentUser() {
     return window.auth?.currentUser ?? null;
 }
@@ -1395,10 +1467,33 @@ async function loadUserData() {
     );
 
     if (!snap.exists()) {
-
-        await saveState();
+      const hasGuestData =
+      collected.size > 0 ||
+      logEntries.length > 0 ||
+      bingoCard !== null;
+      
+      if (hasGuestData) {
+        const transfer = await waitForTransferChoice();
+        
+        if (transfer) {
+          // 「引き継ぐ」
+          await saveState();
+        } else {
+          // 「新しく始める」
+          collected = new Set();
+          logEntries = [];
+          bingoCard = createBingoCard();
+          bingoMarked = new Set(["FREE"]);
+          territoryCounts = {};
+          currentTeam = "a";
+          neighborMissions = [];
+          await saveState();
+        }
+        updateUI();
         return;
-
+      }
+      await saveState();
+      return;
     }
 
     const data = snap.data();
@@ -2475,43 +2570,30 @@ selectTeam(currentTeam);
 updateUI();
 window.addEventListener("load", () => {
 
-    window.onAuthStateChanged(window.auth, async (user) => {
+  document.getElementById("transfer-yes").onclick = () => {
+    hideGuestTransferModal();
+    if (transferResolve) {
+      transferResolve(true);
+    }
+  };
+  
+  document.getElementById("transfer-no").onclick = () => {
+    hideGuestTransferModal();
+    if (transferResolve) {
+      transferResolve(false);
+    }
+  };
 
-        if (user) {
-
-            updateAccountUI(user);
-
-            await loadUserData();
-
-            updateUI();
-
-        } else {
-
-            resetAccountUI();
-
-        }
-
-    });
-
+  window.onAuthStateChanged(window.auth, async (user) => {
+    if (user) {
+      updateAccountUI(user);
+      await loadUserData();
+      updateUI();
+    } else {
+      resetAccountUI();
+    }
+  });
 });
-//onAuthStateChanged(auth, async (user) => {
-
-    //console.log("認証状態が変わりました");
-
-    //if (user) {
-
-        //console.log("ログイン中");
-        //console.log("UID:", user.uid);
-        //console.log("名前:", user.displayName);
-        //console.log("メール:", user.email);
-
-    //} else {
-
-        //console.log("ログアウトしています");
-
-    //}
-
-//});
 </script>
 <script type="module" src="firebase.js"></script>
 </body>
