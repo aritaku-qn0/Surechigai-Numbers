@@ -1563,6 +1563,10 @@ function updateUI() {
   renderMissions();
   renderNeighborMissions();
   renderLog();
+
+  updateTerritoryMapColors();
+  renderTerritoryScores();
+  renderBingo();
 }
 
 // ===== MAP =====
@@ -1965,7 +1969,7 @@ async function captureAndAnalyze() {
               `🧭 新ミッション！ ${newMission.target}県を登録しよう`
             );
           }
-          saveState();
+          await saveState();
           markMapCollected(pref.id);
           updateUI();
           showResult('success',`${areaLabel}（${pref.name}）をゲット！`);
