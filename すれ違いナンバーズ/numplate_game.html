@@ -2195,6 +2195,65 @@ function selectTeam(team) {
   });
 }
 
+async function resetTerritories() {
+
+  if (!confirm("陣取りデータをリセットしますか？")) return;
+
+  for (const pref of PREFS) {
+
+    await window.setDoc(
+      window.doc(window.db, "territories", pref.id),
+      {
+        a: 0,
+        b: 0,
+        c: 0,
+        d: 0
+      }
+    );
+
+  }
+
+  alert("陣取りデータをリセットしました！");
+}
+
+async function resetTeamCounts() {
+
+  if (!confirm("チーム人数をリセットしますか？")) return;
+
+  await window.setDoc(
+    window.doc(window.db, "system", "teamCounts"),
+    {
+      a: 0,
+      b: 0,
+      c: 0,
+      d: 0
+    }
+  );
+
+  alert("チーム人数をリセットしました！");
+}
+
+async function initializeTerritories() {
+
+  if (!confirm("territoriesを初期化しますか？")) return;
+
+  for (const pref of PREFS) {
+
+    await window.setDoc(
+      window.doc(window.db, "territories", pref.id),
+      {
+        a: 0,
+        b: 0,
+        c: 0,
+        d: 0
+      }
+    );
+
+  }
+
+  alert("territoriesを初期化しました！");
+}
+
 async function assignTeamAutomatically() {
 
   const user = currentUser();
