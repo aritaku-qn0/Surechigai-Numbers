@@ -1590,6 +1590,8 @@ function closeDeleteAccountModal(){
 
 async function deleteAccount() {
 
+  console.log(window.reauthenticateWithPopup);
+
     const user = currentUser();
 
     if (!user) return;
