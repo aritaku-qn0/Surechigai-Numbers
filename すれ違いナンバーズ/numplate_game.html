@@ -1954,6 +1954,11 @@ async function captureAndAnalyze() {
         } else {
           const prevMissions = completedMissionCount();
           collected.add(pref.id);
+          console.log("追加後", collected.size);
+          await saveState();
+          console.log("保存後", collected.size);
+          updateUI();
+          console.log("更新後", collected.size);
           console.log(collected);
           console.log(collected.size);
           neighborMissions.forEach(m => {
