@@ -1620,6 +1620,8 @@ async function deleteAccount() {
 
         closeDeleteAccountModal();
 
+        document.getElementById("account-modal").classList.remove("show");
+
         alert("アカウントを削除しました。");
 
         // タイトル画面へ戻す
