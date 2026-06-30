@@ -75,6 +75,22 @@ header {
   color: rgba(245,240,232,0.7);
 }
 
+.header-profile {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-right: 16px;
+}
+
+#header-avatar {
+  font-size: 24px;
+}
+
+#header-name {
+  font-weight: bold;
+  color: var(--paper);
+}
+
 .header-stat span {
   color: var(--paper);
   font-size: 1rem;
@@ -988,6 +1004,12 @@ main {
     すれ違いナンバーズ
     <i class="ti ti-chevron-down"></i>
   </div>
+
+  <div class="header-profile">
+    <span id="header-avatar">😀</span>
+    <span id="header-name">ユーザー</span>
+  </div>
+
   <div class="header-stats">
     <div class="header-stat"><span id="hdr-count">0</span>/<strong>47</strong> 都道府県</div>
     <div class="header-stat">ミッション <span id="hdr-missions">0</span>/<strong id="hdr-missions-total">0</strong> 達成</div>
@@ -1496,7 +1518,9 @@ async function saveAccountSetting() {
         merge: true
       }
     );
-
+    
+    updateProfileHeader();
+    
     alert("保存しました");
 
     document
@@ -1542,6 +1566,16 @@ async function googleLogin() {
 async function logout() {
 
     await window.signOut(window.auth);
+
+}
+
+function updateProfileHeader() {
+
+  document.getElementById("header-name").textContent =
+    document.getElementById("account-name").value || "ユーザー";
+
+  document.getElementById("header-avatar").textContent =
+    selectedAvatar || "😀";
 
 }
 
@@ -1628,6 +1662,8 @@ async function loadUserData() {
 
   if (!user) return;
 
+  let data = {};
+
   try {
 
     const snap = await window.getDoc(
@@ -1636,29 +1672,37 @@ async function loadUserData() {
 
     if (!snap.exists()) return;
 
-    const data = snap.data();
+    data = snap.data();
 
     collected = new Set(data.collected || []);
-
     logEntries = data.logEntries || [];
-
     bingoCard = data.bingoCard || createBingoCard();
-
     bingoMarked = new Set(data.bingoMarked || ["FREE"]);
-
     territoryCounts = data.territoryCounts || {};
-
     currentTeam = data.currentTeam || "a";
-
     neighborMissions = data.neighborMissions || [];
 
+  } catch(e) {
+
+    console.error(e);
+    return;
+
   }
 
-  catch (e) {
-
-    console.error("loadUserData", e);
-
+  if (data.displayName) {
+    document.getElementById("account-name").value = data.displayName;
   }
+
+  selectedAvatar = data.avatar || "😀";
+
+  document.querySelectorAll(".avatar-option").forEach(el=>{
+    el.classList.toggle(
+      "selected",
+      el.textContent === selectedAvatar
+    );
+  });
+
+  updateProfileHeader();
 
 }
 
@@ -2606,7 +2650,13 @@ function updateAccountUI(user) {
 
   const name = document.getElementById("account-name");
 
-  if (name) {
+  if (!name) return;
+
+  // Firestoreの表示名を優先
+  if (document.getElementById("header-name")) {
+    name.value = document.getElementById("header-name").textContent;
+  } else {
+    // Firestoreがまだ読み込まれていなければGoogle名
     name.value = user.displayName || "";
   }
 
