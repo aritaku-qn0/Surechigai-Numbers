@@ -1564,6 +1564,8 @@ async function logout() {
 
     await window.signOut(window.auth);
 
+    resetGameData();
+
     document.getElementById("main-page").classList.remove("active");
     document.getElementById("territory-page").classList.remove("active");
 
@@ -1736,7 +1738,10 @@ async function loadUserData() {
       window.doc(window.db, "users", user.uid)
     );
 
-    if (!snap.exists()) return;
+    if (!snap.exists()) {
+      resetGameData();
+      return;
+    }
 
     data = snap.data();
 
@@ -1769,6 +1774,31 @@ async function loadUserData() {
   });
 
   updateProfileHeader();
+
+}
+
+function resetGameData() {
+
+    collected = new Set();
+    logEntries = [];
+    bingoCard = createBingoCard();
+    bingoMarked = new Set(["FREE"]);
+    territoryCounts = {};
+    currentTeam = "a";
+    neighborMissions = [];
+
+    document.getElementById("account-name").value = "";
+
+    selectedAvatar = "😀";
+
+    document.querySelectorAll(".avatar-option").forEach(el => {
+        el.classList.toggle(
+            "selected",
+            el.textContent === selectedAvatar
+        );
+    });
+
+    updateProfileHeader();
 
 }
 
