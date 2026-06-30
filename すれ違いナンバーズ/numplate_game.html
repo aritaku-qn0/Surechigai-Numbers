@@ -1449,6 +1449,14 @@ let currentTeam = "a";
 let mapGeo = null;
 let stream = null;
 let prefInfoCache = {};
+let currentTeamCounts = {
+
+    a: 0,
+    b: 0,
+    c: 0,
+    d: 0
+
+};
 
 if (!isValidBingoCard(bingoCard)) {
   bingoCard = createBingoCard();
@@ -2123,14 +2131,13 @@ function renderTerritoryScores() {
       <div style="text-align:right">
         <strong>${owned[team]}県</strong><br>
         <small>
-          <span id="team-count-${team}">0</span>人
+          <span id="team-count-${team}">
+            ${currentTeamCounts[team]}
+          </span>人
         </small>
       </div>
     </div>
   `).join('');
-
-  loadTeamCounts();
-
 }
 
 function loadTeamCounts() {
@@ -2145,18 +2152,9 @@ function loadTeamCounts() {
 
         if (!snap.exists()) return;
 
-        const data = snap.data();
+        currentTeamCounts = snap.data();
 
-        console.log("teamCounts:", data);
-        console.log("a =", data.a);
-        console.log("b =", data.b);
-        console.log("c =", data.c);
-        console.log("d =", data.d);
-
-        document.getElementById("team-count-a").textContent = data.a;
-        document.getElementById("team-count-b").textContent = data.b;
-        document.getElementById("team-count-c").textContent = data.c;
-        document.getElementById("team-count-d").textContent = data.d;
+        renderTerritoryScores();
 
     });
 
