@@ -2145,6 +2145,10 @@ function loadTeamCounts() {
         const data = snap.data();
 
         console.log("teamCounts:", data);
+        console.log("a =", data.a);
+        console.log("b =", data.b);
+        console.log("c =", data.c);
+        console.log("d =", data.d);
 
         document.getElementById("team-count-a").textContent = data.a;
         document.getElementById("team-count-b").textContent = data.b;
