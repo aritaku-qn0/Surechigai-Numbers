@@ -1208,27 +1208,6 @@ main {
   </div>
 </div>
 
-<div class="modal-overlay" id="guest-transfer-modal">
-  <div class="modal-box">
-
-    <h2>データの引き継ぎ</h2>
-
-    <p>
-      ゲストプレイのデータが見つかりました。<br>
-      Googleアカウントへ引き継ぎますか？
-    </p>
-
-    <button id="transfer-yes" class="btn primary">
-      引き継ぐ
-    </button>
-
-    <button id="transfer-no" class="btn">
-      新しく始める
-    </button>
-
-  </div>
-</div>
-
 <style>
 @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
 </style>
@@ -1240,28 +1219,6 @@ main {
 <script type="module" src="firebase.js"></script>
 <script>
 console.log("HTMLのscript開始");
-
-function showGuestTransferModal() {
-
-  document
-    .getElementById("guest-transfer-modal")
-    .classList.add("show");
-
-}
-
-let transferResolve = null;
-
-function waitForTransferChoice() {
-
-    return new Promise(resolve => {
-
-        transferResolve = resolve;
-
-        showGuestTransferModal();
-
-    });
-
-}
 
 document.getElementById("transfer-yes").onclick = () => {
 
@@ -1282,14 +1239,6 @@ document.getElementById("transfer-no").onclick = () => {
     }
 
 };
-
-function hideGuestTransferModal() {
-
-  document
-    .getElementById("guest-transfer-modal")
-    .classList.remove("show");
-
-}
 
 function currentUser() {
     return window.auth?.currentUser ?? null;
@@ -1378,26 +1327,15 @@ const MISSIONS = [
   }
 ];
 
-let neighborMissions =
-JSON.parse(
-  localStorage.getItem('nb_neighbor_mission')
-) ||[];
-if(!Array.isArray(neighborMissions)){
-  neighborMissions = [];
-}
+let neighborMissions = [];
 
 // ===== STATE =====
-let collected = new Set(JSON.parse(localStorage.getItem('nb_collected')||'[]'));
-let logEntries = JSON.parse(localStorage.getItem('nb_log')||'[]');
-let bingoCard = JSON.parse(localStorage.getItem('nb_bingo_card')||'null');
-let bingoMarked = new Set(JSON.parse(localStorage.getItem('nb_bingo_marked')||'[]'));
-let territoryCounts = JSON.parse(localStorage.getItem('nb_territory_counts')||'{}');
-let currentTeam = localStorage.getItem('nb_current_team');
-if(!currentTeam){
-  const teams = ['a','b','c','d'];
-  currentTeam = teams[Math.floor(Math.random()*teams.length)];
-  localStorage.setItem('nb_current_team', currentTeam);
-}
+let collected = new Set();
+let logEntries = [];
+let bingoCard = null;
+let bingoMarked = new Set(["FREE"]);
+let territoryCounts = {};
+let currentTeam = "a";
 let mapGeo = null;
 let stream = null;
 let prefInfoCache = {};
@@ -1412,140 +1350,6 @@ if(!isValidBingoCard(bingoCard)){
 }
 
 // ===== INIT =====
-async function saveState() {
-
-    const user = currentUser();
-
-    // ゲストプレイ中は localStorage に保存
-    if (!user) {
-
-        localStorage.setItem("nb_collected", JSON.stringify([...collected]));
-        localStorage.setItem("nb_log", JSON.stringify(logEntries));
-        localStorage.setItem("nb_bingo_card", JSON.stringify(bingoCard));
-        localStorage.setItem("nb_bingo_marked", JSON.stringify([...bingoMarked]));
-        localStorage.setItem("nb_territory_counts", JSON.stringify(territoryCounts));
-        localStorage.setItem("nb_current_team", currentTeam);
-        localStorage.setItem("nb_neighbor_mission", JSON.stringify(neighborMissions));
-
-        return;
-    }
-
-    // ログイン中は Firestore に保存
-    await window.setDoc(
-
-        window.doc(
-            window.db,
-            "users",
-            user.uid
-        ),
-
-        {
-
-            collected: [...collected],
-
-            logEntries,
-
-            bingoCard,
-
-            bingoMarked: [...bingoMarked],
-
-            territoryCounts,
-
-            currentTeam,
-
-            neighborMissions
-
-        },
-
-        {
-            merge: true
-        }
-
-    );
-
-}
-
-async function loadUserData() {
-
-    const user = currentUser();
-
-    if (!user) return;
-
-    const snap = await window.getDoc(
-        window.doc(
-            window.db,
-            "users",
-            user.uid
-        )
-    );
-
-    if (!snap.exists()) {
-      const guestCollected = JSON.parse(localStorage.getItem("nb_collected") || "[]");
-      const guestLog = JSON.parse(localStorage.getItem("nb_log") || "[]");
-      const guestBingo = JSON.parse(localStorage.getItem("nb_bingo_card") || "null");
-      const hasGuestData =
-      guestCollected.length > 0 ||
-      guestLog.length > 0 ||
-      guestBingo !== null;
-      
-      if (hasGuestData) {
-        const transfer = await waitForTransferChoice();
-        
-        if (transfer) {
-          // localStorageから読み込んだゲストデータを使用
-          collected = new Set(guestCollected);
-          logEntries = guestLog;
-          bingoCard = guestBingo;
-          bingoMarked = new Set(
-            JSON.parse(localStorage.getItem("nb_bingo_marked") || '["FREE"]')
-          );
-          territoryCounts = JSON.parse(
-            localStorage.getItem("nb_territory_counts") || "{}"
-          );
-          neighborMissions = JSON.parse(
-            localStorage.getItem("nb_neighbor_mission") || "[]"
-          );
-          currentTeam =
-          localStorage.getItem("nb_current_team") || "a";
-          await saveState();
-        } else {
-          // ゲストデータを削除
-          localStorage.removeItem("nb_collected");
-          localStorage.removeItem("nb_log");
-          localStorage.removeItem("nb_bingo_card");
-          localStorage.removeItem("nb_bingo_marked");
-          localStorage.removeItem("nb_territory_counts");
-          localStorage.removeItem("nb_current_team");
-          localStorage.removeItem("nb_neighbor_mission");
-          
-          // 新規データを作成
-          collected = new Set();
-          logEntries = [];
-          bingoCard = createBingoCard();
-          bingoMarked = new Set(["FREE"]);
-          territoryCounts = {};
-          currentTeam = "a";
-          neighborMissions = [];
-          await saveState();
-        }
-        updateUI();
-        return;
-      }
-      await saveState();
-      return;
-    }
-
-    const data = snap.data();
-
-    collected = new Set(data.collected || []);
-    logEntries = data.logEntries || [];
-    bingoCard = data.bingoCard || null;
-    bingoMarked = new Set(data.bingoMarked || []);
-    territoryCounts = data.territoryCounts || {};
-    currentTeam = data.currentTeam || "a";
-    neighborMissions = data.neighborMissions || [];
-
-}
 
 async function googleLogin() {
 
@@ -2646,20 +2450,6 @@ renderTerritoryScores();
 selectTeam(currentTeam);
 updateUI();
 window.addEventListener("load", () => {
-
-  document.getElementById("transfer-yes").onclick = () => {
-    hideGuestTransferModal();
-    if (transferResolve) {
-      transferResolve(true);
-    }
-  };
-  
-  document.getElementById("transfer-no").onclick = () => {
-    hideGuestTransferModal();
-    if (transferResolve) {
-      transferResolve(false);
-    }
-  };
 
   window.onAuthStateChanged(window.auth, async (user) => {
     if (user) {
