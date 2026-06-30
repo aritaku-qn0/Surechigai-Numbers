@@ -2985,7 +2985,7 @@ window.addEventListener("load", () => {
 
   window.onAuthStateChanged(window.auth, async (user) => {
     if (user) {
-      
+      console.log("UID:", user.uid);
       updateAccountUI(user);
       await loadUserData();
       await assignTeamAutomatically();
