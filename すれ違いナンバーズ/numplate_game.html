@@ -1567,6 +1567,9 @@ async function logout() {
 
     await window.signOut(window.auth);
 
+    document.getElementById("title-screen").style.display = "block";
+    document.getElementById("game-screen").style.display = "none";
+
 }
 
 function updateProfileHeader() {
