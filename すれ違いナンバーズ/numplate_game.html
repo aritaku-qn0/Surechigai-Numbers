@@ -2218,6 +2218,9 @@ async function assignTeamAutomatically() {
 
     const snap = await transaction.get(teamRef);
 
+    console.log(snap.exists());
+    console.log(snap.data());
+
     const data = snap.data();
 
     console.log("teamCounts", data);
