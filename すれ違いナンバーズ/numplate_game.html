@@ -1944,22 +1944,6 @@ async function deleteAccount() {
 
     // Firestore側のユーザーデータも削除
     // （認証が切れる前に、Authユーザー削除より先に行う）
-    const userSnap = await window.getDoc(window.doc(window.db, "users", user.uid));
-    const myTeam = userSnap.exists() ? userSnap.data().currentTeam : null;
-
-    if (myTeam) {
-      const teamRef = window.doc(window.db, "system", "teamCounts");
-      await window.runTransaction(window.db, async (transaction) => {
-        const snap = await transaction.get(teamRef);
-        if (snap.exists()) {
-          const current = snap.data()[myTeam] || 0;
-          transaction.update(teamRef, {
-            [myTeam]: Math.max(0, current - 1)
-          });
-        }
-      });
-    }
-
     await window.deleteDoc(window.doc(window.db, "users", user.uid));
 
     // アカウント削除
@@ -2451,23 +2435,28 @@ function renderTerritoryScores() {
   `).join('');
 }
 
-function loadTeamCounts() {
+async function loadTeamCounts() {
 
-    const ref = window.doc(
-        window.db,
-        "system",
-        "teamCounts"
-    );
+    try {
 
-    window.onSnapshot(ref, (snap) => {
+        const teams = ["a", "b", "c", "d"];
+        const counts = {};
 
-        if (!snap.exists()) return;
+        for (const team of teams) {
+            const q = window.query(
+                window.collection(window.db, "users"),
+                window.where("currentTeam", "==", team)
+            );
+            const snap = await window.getCountFromServer(q);
+            counts[team] = snap.data().count;
+        }
 
-        currentTeamCounts = snap.data();
-
+        currentTeamCounts = counts;
         renderTerritoryScores();
 
-    });
+    } catch (error) {
+        console.error("チーム人数の集計に失敗:", error);
+    }
 
 }
 
@@ -2576,22 +2565,11 @@ async function reshuffleAllTeams() {
 
   try {
 
-    const usersSnapshot = await window.getDocs(window.collection(window.db, "users"));
-
-    const counts = { a: 0, b: 0, c: 0, d: 0 };
-
-    usersSnapshot.forEach((userDoc) => {
-      const team = userDoc.data().currentTeam;
-      if (team && counts.hasOwnProperty(team)) {
-        counts[team]++;
-      }
-    });
-
-    await window.setDoc(window.doc(window.db, "system", "teamCounts"), counts);
+    await loadTeamCounts();
 
     alert(
-      `再集計しました！（対象: ${usersSnapshot.size}人）\n` +
-      `A:${counts.a} B:${counts.b} C:${counts.c} D:${counts.d}`
+      `再集計しました！\n` +
+      `A:${currentTeamCounts.a} B:${currentTeamCounts.b} C:${currentTeamCounts.c} D:${currentTeamCounts.d}`
     );
 
   } catch (error) {
@@ -2623,49 +2601,29 @@ async function assignTeamAutomatically(targetUid) {
 
   }
 
-  const teamRef = window.doc(window.db, "system", "teamCounts");
-  let chosenTeam = null;
+  // 実際のusersコレクションを数えて、一番人数が少ないチームを選ぶ
+  const teamIds = ["a", "b", "c", "d"];
+  const teams = [];
 
-  await window.runTransaction(window.db, async (transaction) => {
-
-    const snap = await transaction.get(teamRef);
-
-    const data = snap.data();
-
-    console.log("teamCounts", data);
-
-    const teams = [
-      { id: "a", count: data.a },
-      { id: "b", count: data.b },
-      { id: "c", count: data.c },
-      { id: "d", count: data.d }
-    ];
-    // 最少人数を調べる
-    const minCount = Math.min(...teams.map(t => t.count));
-    // 最少人数のチームだけ取り出す
-    const candidates = teams.filter(t => t.count === minCount);
-    // その中からランダムに1チーム選ぶ
-    const randomIndex = Math.floor(Math.random() * candidates.length);
-
-    chosenTeam = candidates[randomIndex].id;
-
-    transaction.update(teamRef, {
-      [chosenTeam]: data[chosenTeam] + 1
-    });
-
-    console.log("更新するチーム", chosenTeam);
-
-    transaction.set(
-      userRef,
-      {
-        currentTeam: chosenTeam
-      },
-      {
-        merge: true
-      }
+  for (const id of teamIds) {
+    const q = window.query(
+      window.collection(window.db, "users"),
+      window.where("currentTeam", "==", id)
     );
+    const snap = await window.getCountFromServer(q);
+    teams.push({ id, count: snap.data().count });
+  }
 
-  });
+  const minCount = Math.min(...teams.map(t => t.count));
+  const candidates = teams.filter(t => t.count === minCount);
+  const randomIndex = Math.floor(Math.random() * candidates.length);
+  const chosenTeam = candidates[randomIndex].id;
+
+  await window.setDoc(
+    userRef,
+    { currentTeam: chosenTeam },
+    { merge: true }
+  );
 
   if (isSelf) {
     currentTeam = chosenTeam;

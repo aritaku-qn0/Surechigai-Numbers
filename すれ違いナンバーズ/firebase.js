@@ -23,7 +23,10 @@ import {
   deleteDoc,
   runTransaction,
   onSnapshot,
-  collection
+  collection,
+  query,
+  where,
+  getCountFromServer
 } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -52,6 +55,9 @@ window.runTransaction = runTransaction;
 window.deleteUser = deleteUser;
 window.onSnapshot = onSnapshot;
 window.collection = collection;
+window.query = query;
+window.where = where;
+window.getCountFromServer = getCountFromServer;
 window.createUserWithEmailAndPassword = createUserWithEmailAndPassword;
 window.signInWithEmailAndPassword = signInWithEmailAndPassword;
 window.EmailAuthProvider = EmailAuthProvider;
