@@ -684,6 +684,8 @@ main {
 
 .modal-box {
   width: min(90%, 360px);
+  max-height: 85vh;
+  overflow-y: auto;
   background: white;
   border-radius: 16px;
   padding: 24px;
@@ -2032,6 +2034,7 @@ async function loadUserData() {
     territoryCounts = data.territoryCounts || {};
     currentTeam = data.currentTeam || "a";
     neighborMissions = data.neighborMissions || [];
+    window.isAdmin = data.isAdmin === true;
 
   } catch(e) {
 
@@ -3329,8 +3332,6 @@ selectTeam(currentTeam);
 updateUI();
 window.addEventListener("load", () => {
 
-  const ADMIN_UID = "HHPzWeP60IWZppqHnKGpb9Eft7W2";
-  
   window.onAuthStateChanged(window.auth, async (user) => {
     if (user) {
       console.log("ログイン中:", user.uid);
@@ -3340,10 +3341,9 @@ window.addEventListener("load", () => {
       await assignTeamAutomatically();
       updateUI();
 
-      // 管理者だけ開発メニュー表示
-      if (user.uid === ADMIN_UID) {
-        document.getElementById("dev-menu").style.display = "block";
-      }
+      // 管理者だけ開発メニュー表示（Firestoreのusers/{uid}.isAdminで判定）
+      document.getElementById("dev-menu").style.display =
+        window.isAdmin ? "block" : "none";
 
     } else {
       console.log("未ログイン");
