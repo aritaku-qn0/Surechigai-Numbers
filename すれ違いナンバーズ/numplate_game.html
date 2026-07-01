@@ -1731,7 +1731,7 @@ async function createAccount() {
     await setDoc(doc(db, "users", user.uid), {
       displayName: name,
       gameId: gameId,
-      icon: icon
+      avatar: icon
     });
 
     // チーム自動振り分け（←ここ追加！！）
