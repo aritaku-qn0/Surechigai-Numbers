@@ -1366,26 +1366,13 @@ main {
     <hr style="margin:20px 0;border:none;border-top:1px solid #e0dcd0">
 
     <div style="text-align:left;font-size:0.8rem;color:#8a7a60;margin-bottom:8px">
-      ゲームID・パスワードの変更
+      パスワードの変更
     </div>
-
-    <input
-      id="account-new-gameid"
-      type="text"
-      placeholder="新しいゲームID（変更しない場合は空欄）"
-      style="
-      width:100%;
-      padding:10px;
-      margin:6px 0;
-      border-radius:8px;
-      border:1px solid #ccc;
-      "
-    >
 
     <input
       id="account-new-password"
       type="password"
-      placeholder="新しいパスワード（変更しない場合は空欄）"
+      placeholder="新しいパスワード"
       style="
       width:100%;
       padding:10px;
@@ -1414,7 +1401,7 @@ main {
       class="btn primary"
       onclick="updateCredentials()">
 
-      ID・パスワードを更新
+      パスワードを更新
 
       </button>
 
@@ -1468,6 +1455,10 @@ main {
       type="text"
       placeholder="ゲームID"
       style="width:100%;padding:10px;margin:8px 0;border-radius:8px;border:1px solid #ccc;">
+
+    <div style="text-align:left;font-size:0.75rem;color:#c0392b;margin:0 2px 8px">
+      ※ゲームIDは作成後に変更できません。半角英数字で入力してください
+    </div>
 
     <input
       id="register-password"
@@ -1804,12 +1795,11 @@ async function updateCredentials() {
     return;
   }
 
-  const newGameId = document.getElementById("account-new-gameid").value.trim();
   const newPassword = document.getElementById("account-new-password").value;
   const currentPassword = document.getElementById("account-current-password").value;
 
-  if (!newGameId && !newPassword) {
-    alert("ゲームIDまたはパスワードのどちらかを入力してください");
+  if (!newPassword) {
+    alert("新しいパスワードを入力してください");
     return;
   }
 
@@ -1820,46 +1810,26 @@ async function updateCredentials() {
 
   const idPasswordPattern = /^[a-zA-Z0-9_-]+$/;
 
-  if (newGameId && !idPasswordPattern.test(newGameId)) {
-    alert("ゲームIDは半角英数字（と - _ ）のみ使用できます");
-    return;
-  }
-
-  if (newPassword && !idPasswordPattern.test(newPassword)) {
+  if (!idPasswordPattern.test(newPassword)) {
     alert("パスワードは半角英数字（と - _ ）のみ使用できます");
     return;
   }
 
-  if (newPassword && newPassword.length < 6) {
+  if (newPassword.length < 6) {
     alert("パスワードは6文字以上にしてください");
     return;
   }
 
   try {
 
-    // Firebaseの仕様上、メール(=ゲームID)やパスワードの変更には再認証が必須
+    // Firebaseの仕様上、パスワードの変更には再認証が必須
     const credential = window.EmailAuthProvider.credential(user.email, currentPassword);
     await window.reauthenticateWithCredential(user, credential);
 
-    if (newGameId) {
-      const newEmail = newGameId + "@surechigai.app";
-      await window.updateEmail(user, newEmail);
-      await window.setDoc(
-        window.doc(window.db, "users", user.uid),
-        { gameId: newGameId },
-        { merge: true }
-      );
-    }
+    await window.updatePassword(user, newPassword);
 
-    if (newPassword) {
-      await window.updatePassword(user, newPassword);
-    }
+    alert("パスワードを更新しました！");
 
-    alert("更新しました！");
-
-    updateAccountUI(window.auth.currentUser);
-
-    document.getElementById("account-new-gameid").value = "";
     document.getElementById("account-new-password").value = "";
     document.getElementById("account-current-password").value = "";
 
@@ -1869,8 +1839,6 @@ async function updateCredentials() {
 
     if (error.code === "auth/wrong-password" || error.code === "auth/invalid-credential") {
       alert("現在のパスワードが間違っています");
-    } else if (error.code === "auth/email-already-in-use") {
-      alert("そのゲームIDは既に使われています");
     } else if (error.code === "auth/weak-password") {
       alert("新しいパスワードは6文字以上にしてください");
     } else {
@@ -3278,7 +3246,6 @@ function openAccountModal(){
         resetAccountUI();
     }
 
-    document.getElementById("account-new-gameid").value = "";
     document.getElementById("account-new-password").value = "";
     document.getElementById("account-current-password").value = "";
 
