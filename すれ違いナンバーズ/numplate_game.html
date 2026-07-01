@@ -1640,17 +1640,11 @@ function selectAvatar(el){
 
 }
 
-function openRegisterModal() {
-
-    alert("アカウント作成画面はこれから作ります");
-
-}
-
 async function createAccount() {
   const name = document.getElementById("register-name").value;
   const gameId = document.getElementById("register-id").value;
   const password = document.getElementById("register-password").value;
-  const icon = document.getElementById("register-icon").value;
+  const icon = registerAvatar;
 
   if (!name || !gameId || !password) {
     alert("全部入力してください");
@@ -1733,7 +1727,7 @@ async function saveAccountSetting() {
 
 async function login(username, password) {
   try {
-    const fakeEmail = username + "@example.com";
+    const fakeEmail = username + "@surechigai.app";
 
     const userCredential = await signInWithEmailAndPassword(
       auth,
@@ -3179,13 +3173,11 @@ function saveAccount(){
 }
 
 function showGameScreen() {
-  document.getElementById("login-screen").style.display = "none";
-  document.getElementById("game-screen").style.display = "block";
+  document.getElementById("title-screen").style.display = "none";
 }
 
 function showLoginScreen() {
-  document.getElementById("login-screen").style.display = "block";
-  document.getElementById("game-screen").style.display = "none";
+  document.getElementById("title-screen").style.display = "flex";
 }
 
 document.getElementById('account-modal').addEventListener('click', function(e){

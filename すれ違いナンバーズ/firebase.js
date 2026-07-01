@@ -56,4 +56,3 @@ window.EmailAuthProvider = EmailAuthProvider;
 window.reauthenticateWithCredential = reauthenticateWithCredential;
 
 console.log("deleteUser =", deleteUser);
-console.log("reauthenticateWithPopup =", reauthenticateWithPopup);
