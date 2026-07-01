@@ -1360,6 +1360,63 @@ main {
 
     </div>
 
+    <hr style="margin:20px 0;border:none;border-top:1px solid #e0dcd0">
+
+    <div style="text-align:left;font-size:0.8rem;color:#8a7a60;margin-bottom:8px">
+      ゲームID・パスワードの変更
+    </div>
+
+    <input
+      id="account-new-gameid"
+      type="text"
+      placeholder="新しいゲームID（変更しない場合は空欄）"
+      style="
+      width:100%;
+      padding:10px;
+      margin:6px 0;
+      border-radius:8px;
+      border:1px solid #ccc;
+      "
+    >
+
+    <input
+      id="account-new-password"
+      type="password"
+      placeholder="新しいパスワード（変更しない場合は空欄）"
+      style="
+      width:100%;
+      padding:10px;
+      margin:6px 0;
+      border-radius:8px;
+      border:1px solid #ccc;
+      "
+    >
+
+    <input
+      id="account-current-password"
+      type="password"
+      placeholder="確認のため現在のパスワードを入力"
+      style="
+      width:100%;
+      padding:10px;
+      margin:6px 0;
+      border-radius:8px;
+      border:1px solid #ccc;
+      "
+    >
+
+    <div class="modal-btn-wrap">
+
+      <button
+      class="btn primary"
+      onclick="updateCredentials()">
+
+      ID・パスワードを更新
+
+      </button>
+
+    </div>
+
 
 
     <div style="margin-top:15px">
@@ -1712,6 +1769,73 @@ async function saveAccountSetting() {
 
     console.error(e);
     alert(e.message);
+
+  }
+
+}
+
+async function updateCredentials() {
+
+  const user = window.auth?.currentUser;
+
+  if (!user) {
+    alert("ログインしていません");
+    return;
+  }
+
+  const newGameId = document.getElementById("account-new-gameid").value.trim();
+  const newPassword = document.getElementById("account-new-password").value;
+  const currentPassword = document.getElementById("account-current-password").value;
+
+  if (!newGameId && !newPassword) {
+    alert("ゲームIDまたはパスワードのどちらかを入力してください");
+    return;
+  }
+
+  if (!currentPassword) {
+    alert("確認のため、現在のパスワードを入力してください");
+    return;
+  }
+
+  try {
+
+    // Firebaseの仕様上、メール(=ゲームID)やパスワードの変更には再認証が必須
+    const credential = window.EmailAuthProvider.credential(user.email, currentPassword);
+    await window.reauthenticateWithCredential(user, credential);
+
+    if (newGameId) {
+      const newEmail = newGameId + "@surechigai.app";
+      await window.updateEmail(user, newEmail);
+      await window.setDoc(
+        window.doc(window.db, "users", user.uid),
+        { gameId: newGameId },
+        { merge: true }
+      );
+    }
+
+    if (newPassword) {
+      await window.updatePassword(user, newPassword);
+    }
+
+    alert("更新しました！");
+
+    document.getElementById("account-new-gameid").value = "";
+    document.getElementById("account-new-password").value = "";
+    document.getElementById("account-current-password").value = "";
+
+  } catch (error) {
+
+    console.error(error);
+
+    if (error.code === "auth/wrong-password" || error.code === "auth/invalid-credential") {
+      alert("現在のパスワードが間違っています");
+    } else if (error.code === "auth/email-already-in-use") {
+      alert("そのゲームIDは既に使われています");
+    } else if (error.code === "auth/weak-password") {
+      alert("新しいパスワードは6文字以上にしてください");
+    } else {
+      alert("更新失敗: " + error.message);
+    }
 
   }
 
@@ -3103,6 +3227,10 @@ function openAccountModal(){
     } else {
         resetAccountUI();
     }
+
+    document.getElementById("account-new-gameid").value = "";
+    document.getElementById("account-new-password").value = "";
+    document.getElementById("account-current-password").value = "";
 
     document.getElementById("account-modal")
         .classList.add("show");

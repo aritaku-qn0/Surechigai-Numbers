@@ -8,7 +8,9 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   reauthenticateWithCredential,
-  EmailAuthProvider
+  EmailAuthProvider,
+  updateEmail,
+  updatePassword
 } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
 
 import {
@@ -54,5 +56,7 @@ window.createUserWithEmailAndPassword = createUserWithEmailAndPassword;
 window.signInWithEmailAndPassword = signInWithEmailAndPassword;
 window.EmailAuthProvider = EmailAuthProvider;
 window.reauthenticateWithCredential = reauthenticateWithCredential;
+window.updateEmail = updateEmail;
+window.updatePassword = updatePassword;
 
 console.log("deleteUser =", deleteUser);
