@@ -7,7 +7,11 @@ import {
   signOut,
   onAuthStateChanged,
   deleteUser,
-  reauthenticateWithPopup
+  reauthenticateWithPopup,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  reauthenticateWithCredential,
+  EmailAuthProvider
 } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
 
 import {
@@ -36,7 +40,6 @@ const app = initializeApp(firebaseConfig);
 
 window.auth = getAuth(app);
 window.db = getFirestore(app);
-window.provider = new GoogleAuthProvider();
 
 window.signInWithPopup = signInWithPopup;
 window.signOut = signOut;
@@ -52,6 +55,10 @@ window.deleteUser = deleteUser;
 window.reauthenticateWithPopup = reauthenticateWithPopup;
 window.onSnapshot = onSnapshot;
 window.collection = collection;
+window.createUserWithEmailAndPassword = createUserWithEmailAndPassword;
+window.signInWithEmailAndPassword = signInWithEmailAndPassword;
+window.EmailAuthProvider = EmailAuthProvider;
+window.reauthenticateWithCredential = reauthenticateWithCredential;
 
 console.log("deleteUser =", deleteUser);
 console.log("reauthenticateWithPopup =", reauthenticateWithPopup);

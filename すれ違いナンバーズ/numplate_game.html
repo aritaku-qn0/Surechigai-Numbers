@@ -926,6 +926,17 @@ main {
   background:#d8f3dc;
 }
 
+.register-avatar{
+    font-size:32px;
+    cursor:pointer;
+    padding:5px;
+    border-radius:10px;
+}
+
+.register-avatar.selected{
+    background:#d8f3dc;
+}
+
 /* TITLE SCREEN */
 
 #title-screen {
@@ -981,16 +992,53 @@ main {
       Surechigai Numbers
     </h1>
 
-    <p>
-      ナンバープレート収集ゲーム
-    </p>
+    <p>ナンバープレート収集ゲーム</p>
 
+    <input
+      id="login-id"
+      type="text"
+      placeholder="ゲームID"
+      style="
+        width:260px;
+        padding:12px;
+        margin-bottom:10px;
+        border-radius:8px;
+        border:1px solid #ccc;
+      "
+    >
 
-    <button 
+    <br>
+
+    <input
+      id="login-password"
+      type="password"
+      placeholder="パスワード"
+      style="
+        width:260px;
+        padding:12px;
+        margin-bottom:20px;
+        border-radius:8px;
+        border:1px solid #ccc;
+      "
+    >
+
+    <br>
+
+    <button
       class="btn primary start-btn"
-      onclick="startGame()">
+      onclick="login()">
 
-      ゲームスタート
+      ログイン
+
+    </button>
+
+    <br><br>
+
+    <button
+      class="btn"
+      onclick="openRegisterModal()">
+
+      アカウント作成
 
     </button>
 
@@ -1338,6 +1386,74 @@ main {
   </div>
 </div>
 
+<div class="modal-overlay" id="register-modal">
+
+  <div class="modal-box">
+
+    <div class="modal-icon">🎮</div>
+
+    <h2>アカウント作成</h2>
+
+    <input
+      id="register-name"
+      type="text"
+      placeholder="名前"
+      style="width:100%;padding:10px;margin:8px 0;border-radius:8px;border:1px solid #ccc;">
+
+    <input
+      id="register-id"
+      type="text"
+      placeholder="ゲームID"
+      style="width:100%;padding:10px;margin:8px 0;border-radius:8px;border:1px solid #ccc;">
+
+    <input
+      id="register-password"
+      type="password"
+      placeholder="パスワード"
+      style="width:100%;padding:10px;margin:8px 0;border-radius:8px;border:1px solid #ccc;">
+
+    <div style="margin:15px 0">
+
+      <div>アイコン</div>
+
+      <div style="
+        display:flex;
+        gap:10px;
+        justify-content:center;
+        margin-top:10px;">
+
+        <span onclick="selectRegisterAvatar(this)" class="register-avatar">😀</span>
+        <span onclick="selectRegisterAvatar(this)" class="register-avatar">😎</span>
+        <span onclick="selectRegisterAvatar(this)" class="register-avatar">🤠</span>
+        <span onclick="selectRegisterAvatar(this)" class="register-avatar">👧</span>
+        <span onclick="selectRegisterAvatar(this)" class="register-avatar">🧑</span>
+
+      </div>
+
+    </div>
+
+    <button
+      class="btn primary"
+      onclick="createAccount()">
+
+      作成する
+
+    </button>
+
+    <br><br>
+
+    <button
+      class="btn"
+      onclick="closeRegisterModal()">
+
+      キャンセル
+
+    </button>
+
+  </div>
+
+</div>
+
 <style>
 @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
 </style>
@@ -1478,6 +1594,36 @@ async function startGame() {
 
 let selectedAvatar = "😀";
 
+let registerAvatar = "😀";
+
+function openRegisterModal(){
+
+    document
+        .getElementById("register-modal")
+        .classList.add("show");
+
+}
+
+function closeRegisterModal(){
+
+    document
+        .getElementById("register-modal")
+        .classList.remove("show");
+
+}
+
+function selectRegisterAvatar(el){
+
+    document
+        .querySelectorAll(".register-avatar")
+        .forEach(x=>x.classList.remove("selected"));
+
+    el.classList.add("selected");
+
+    registerAvatar = el.textContent;
+
+}
+
 function selectAvatar(el){
 
   document
@@ -1492,6 +1638,45 @@ function selectAvatar(el){
 
   selectedAvatar = el.textContent;
 
+}
+
+function openRegisterModal() {
+
+    alert("アカウント作成画面はこれから作ります");
+
+}
+
+async function createAccount() {
+  const name = document.getElementById("name").value;
+  const gameId = document.getElementById("gameId").value;
+  const password = document.getElementById("password").value;
+  const icon = selectedIcon;
+
+  const email = gameId + "@surechigai.app";
+
+  try {
+    // ① アカウント作成
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
+
+    // ② Firestore保存（チームは入れない）
+    await setDoc(doc(db, "users", user.uid), {
+      displayName: name,
+      gameId: gameId,
+      icon: icon
+    });
+
+    // ③ チーム自動振り分け（←これが重要）
+    await assignTeamAutomatically();
+
+    // ④ UI処理
+    closeCreateAccountModal();
+    showGameScreen(); // あれば
+
+  } catch (error) {
+    console.error("アカウント作成エラー:", error);
+    alert(error.message);
+  }
 }
 
 async function saveAccountSetting() {
@@ -1540,6 +1725,7 @@ async function saveAccountSetting() {
 
 }
 
+//消すかも
 async function googleLogin() {
 
   console.log("googleLogin開始");
@@ -1568,6 +1754,51 @@ async function googleLogin() {
     console.error(e);
 
   }
+
+}
+
+async function login() {
+
+    const gameId = document.getElementById("login-id").value.trim();
+    const password = document.getElementById("login-password").value;
+
+    if (!gameId || !password) {
+        alert("ゲームIDとパスワードを入力してください");
+        return;
+    }
+
+    try {
+
+        const email = gameId + "@surechigai.app";
+
+        await window.signInWithEmailAndPassword(
+            window.auth,
+            email,
+            password
+        );
+
+        await loadUserData();
+
+        updateUI();
+
+        loadTeamCounts();
+
+        listenTerritories();
+
+        document
+            .getElementById("main-page")
+            .classList.add("active");
+
+        document
+            .getElementById("title-screen")
+            .style.display = "none";
+
+    } catch (e) {
+
+        console.error(e);
+        alert("ゲームIDまたはパスワードが違います");
+
+    }
 
 }
 
@@ -1602,68 +1833,27 @@ function closeDeleteAccountModal(){
 }
 
 async function deleteAccount() {
+  const user = auth.currentUser;
 
-    const user = currentUser();
+  const gameId = prompt("ゲームIDを入力してください");
+  const password = prompt("パスワードを入力してください");
 
-    if (!user) return;
+  const email = gameId + "@surechigai.app";
 
-    try {
+  try {
+    // 🔥 ここが変更ポイント
+    const credential = EmailAuthProvider.credential(email, password);
+    await reauthenticateWithCredential(user, credential);
 
-        // Googleで再認証
-        await window.reauthenticateWithPopup(
-            user,
-            window.provider
-        );
+    // アカウント削除
+    await deleteUser(user);
 
-        console.log("再認証OK");
+    alert("アカウント削除しました");
 
-        const teamRef = window.doc(window.db, "system", "teamCounts");
-        const userRef = window.doc(window.db, "users", user.uid);
-        await window.runTransaction(window.db, async (transaction) => {
-          const teamSnap = await transaction.get(teamRef);
-          const userSnap = await transaction.get(userRef);
-          if (!teamSnap.exists() || !userSnap.exists()) return;
-          const teamData = teamSnap.data();
-          const userData = userSnap.data();
-          const team = userData.currentTeam;
-          if (team && teamData[team] > 0) {
-            transaction.update(teamRef, {
-              [team]: teamData[team] - 1
-            });
-          }
-        });
-
-        // Firestore削除
-        await window.deleteDoc(
-            window.doc(window.db, "users", user.uid)
-        );
-
-        console.log("Firestore削除OK");
-
-        // Authentication削除
-        await window.deleteUser(user);
-
-        console.log("Authentication削除OK");
-
-        closeDeleteAccountModal();
-
-        document.getElementById("account-modal").classList.remove("show");
-
-        alert("アカウントを削除しました。");
-
-        // タイトル画面へ戻す
-        document.getElementById("title-screen").style.display = "flex";
-
-        document.getElementById("main-page").classList.remove("active");
-        document.getElementById("territory-page").classList.remove("active");
-
-    } catch (e) {
-
-        console.error(e);
-        alert("削除できませんでした\n" + e.code + "\n" + e.message);
-
-    }
-
+  } catch (error) {
+    console.error(error);
+    alert("認証失敗：" + error.message);
+  }
 }
 
 function updateProfileHeader() {
