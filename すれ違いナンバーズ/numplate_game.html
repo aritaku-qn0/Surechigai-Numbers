@@ -1587,9 +1587,6 @@ async function startGame() {
   console.log("startGame");
 
   document.getElementById("title-screen").style.display = "none";
-
-  await googleLogin();
-
 }
 
 let selectedAvatar = "😀";
@@ -1653,6 +1650,7 @@ async function createAccount() {
   const icon = selectedIcon;
 
   const email = gameId + "@surechigai.app";
+  await signInWithEmailAndPassword(auth, email, password);
 
   try {
     // ① アカウント作成
@@ -1720,38 +1718,6 @@ async function saveAccountSetting() {
 
     console.error(e);
     alert(e.message);
-
-  }
-
-}
-
-//消すかも
-async function googleLogin() {
-
-  console.log("googleLogin開始");
-
-  try {
-
-    await window.signInWithPopup(
-      window.auth,
-      window.provider
-    );
-
-    await loadUserData();
-
-    updateUI();
-    
-    loadTeamCounts(); 
-    
-    listenTerritories();
-    
-    document
-      .getElementById("main-page")
-      .classList.add("active");
-
-  } catch (e) {
-
-    console.error(e);
 
   }
 

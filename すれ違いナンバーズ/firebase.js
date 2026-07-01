@@ -2,12 +2,9 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebas
 
 import {
   getAuth,
-  GoogleAuthProvider,
-  signInWithPopup,
   signOut,
   onAuthStateChanged,
   deleteUser,
-  reauthenticateWithPopup,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   reauthenticateWithCredential,
@@ -41,7 +38,6 @@ const app = initializeApp(firebaseConfig);
 window.auth = getAuth(app);
 window.db = getFirestore(app);
 
-window.signInWithPopup = signInWithPopup;
 window.signOut = signOut;
 window.onAuthStateChanged = onAuthStateChanged;
 window.doc = doc;
@@ -52,7 +48,6 @@ window.updateDoc = updateDoc;
 window.deleteDoc = deleteDoc;
 window.runTransaction = runTransaction;
 window.deleteUser = deleteUser;
-window.reauthenticateWithPopup = reauthenticateWithPopup;
 window.onSnapshot = onSnapshot;
 window.collection = collection;
 window.createUserWithEmailAndPassword = createUserWithEmailAndPassword;
