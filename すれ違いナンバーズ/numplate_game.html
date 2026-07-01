@@ -1046,6 +1046,8 @@ main {
 
 </div>
 
+
+
 <header>
   <div class="logo" onclick="toggleMenu()">
     <i class="ti ti-map logo-icon"></i>
@@ -1644,36 +1646,47 @@ function openRegisterModal() {
 }
 
 async function createAccount() {
-  const name = document.getElementById("name").value;
-  const gameId = document.getElementById("gameId").value;
-  const password = document.getElementById("password").value;
-  const icon = selectedIcon;
+  const name = document.getElementById("register-name").value;
+  const gameId = document.getElementById("register-id").value;
+  const password = document.getElementById("register-password").value;
+  const icon = document.getElementById("register-icon").value;
 
-  const email = gameId + "@surechigai.app";
-  await signInWithEmailAndPassword(auth, email, password);
+  if (!name || !gameId || !password) {
+    alert("全部入力して");
+    return;
+  }
 
   try {
-    // ① アカウント作成
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    // 🔥 メール生成
+    const email = gameId + "@surechigai.app";
+
+    // 🔥 ユーザー作成
+    const userCredential = await createUserWithEmailAndPassword(
+      auth,
+      email,
+      password
+    );
+
     const user = userCredential.user;
 
-    // ② Firestore保存（チームは入れない）
+    // 🔥 Firestore保存（ここ重要）
     await setDoc(doc(db, "users", user.uid), {
       displayName: name,
       gameId: gameId,
       icon: icon
     });
 
-    // ③ チーム自動振り分け（←これが重要）
+    // 🔥 チーム自動振り分け（既存関数）
     await assignTeamAutomatically();
 
-    // ④ UI処理
-    closeCreateAccountModal();
-    showGameScreen(); // あれば
+    alert("アカウント作成成功！");
+
+    // モーダル閉じる（あれば）
+    closeRegisterModal();
 
   } catch (error) {
-    console.error("アカウント作成エラー:", error);
-    alert(error.message);
+    console.error(error);
+    alert("作成失敗: " + error.message);
   }
 }
 
@@ -1723,49 +1736,41 @@ async function saveAccountSetting() {
 
 }
 
-async function login() {
+async function login(email, password) {
+  try {
+    // 🔐 Firebase Authでログイン
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
 
-    const gameId = document.getElementById("login-id").value.trim();
-    const password = document.getElementById("login-password").value;
+    console.log("ログイン成功:", user.uid);
 
-    if (!gameId || !password) {
-        alert("ゲームIDとパスワードを入力してください");
-        return;
+    // 👇 Firestoreのユーザー情報取得
+    const userRef = doc(db, "users", user.uid);
+    const userSnap = await getDoc(userRef);
+
+    if (!userSnap.exists()) {
+      console.error("ユーザーデータが存在しない");
+      return;
     }
 
-    try {
+    const userData = userSnap.data();
 
-        const email = gameId + "@surechigai.app";
+    console.log("ユーザー情報:", userData);
 
-        await window.signInWithEmailAndPassword(
-            window.auth,
-            email,
-            password
-        );
-
-        await loadUserData();
-
-        updateUI();
-
-        loadTeamCounts();
-
-        listenTerritories();
-
-        document
-            .getElementById("main-page")
-            .classList.add("active");
-
-        document
-            .getElementById("title-screen")
-            .style.display = "none";
-
-    } catch (e) {
-
-        console.error(e);
-        alert("ゲームIDまたはパスワードが違います");
-
+    // 👇 チーム確認
+    if (!userData.currentTeam) {
+      console.log("チーム未割当 → 自動割り当て");
+      await assignTeamAutomatically(user.uid);
+    } else {
+      console.log("所属チーム:", userData.currentTeam);
     }
 
+    // 👇 画面遷移（例）
+    window.location.href = "game.html";
+
+  } catch (error) {
+    console.error("ログイン失敗:", error.message);
+  }
 }
 
 async function logout() {
@@ -2418,76 +2423,21 @@ async function initializeTerritories() {
 }
 
 async function reshuffleAllTeams() {
+  const usersSnapshot = await getDocs(collection(db, "users"));
 
-    if (!confirm("全ユーザーのチームを再抽選しますか？")) return;
+  // 一旦リセット
+  await setDoc(doc(db, "system", "teamCounts"), {
+    a: 0,
+    b: 0,
+    c: 0,
+    d: 0
+  });
 
-    try {
+  for (const userDoc of usersSnapshot.docs) {
+    const uid = userDoc.id;
 
-        const usersSnap = await window.getDocs(
-
-            window.collection(window.db, "users")
-
-        );
-
-        const teamCounts = {
-
-            a: 0,
-            b: 0,
-            c: 0,
-            d: 0
-
-        };
-
-        for (const userDoc of usersSnap.docs) {
-
-            const min = Math.min(...Object.values(teamCounts));
-
-            const candidates = Object.keys(teamCounts).filter(
-
-                team => teamCounts[team] === min
-
-            );
-
-            const team = candidates[
-
-                Math.floor(Math.random() * candidates.length)
-
-            ];
-
-            teamCounts[team]++;
-
-            await window.updateDoc(
-
-                window.doc(window.db, "users", userDoc.id),
-
-                {
-
-                    currentTeam: team
-
-                }
-
-            );
-
-        }
-
-        await window.setDoc(
-
-            window.doc(window.db, "system", "teamCounts"),
-
-            teamCounts
-
-        );
-
-        alert("全ユーザーのチームを再抽選しました。");
-
-    } catch (error) {
-
-        console.error(error);
-
-        alert("再抽選に失敗しました。");
-
-    }
-
+    const team = await assignTeamAutomatically(uid);
+  }
 }
 
 async function assignTeamAutomatically() {
