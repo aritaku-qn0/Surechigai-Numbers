@@ -1026,10 +1026,11 @@ main {
 
     <button
       class="btn primary start-btn"
-      onclick="login()">
-
+      onclick="login(
+        document.getElementById('login-id').value,
+        document.getElementById('login-password').value
+      )">
       ログイン
-
     </button>
 
     <br><br>
@@ -1652,36 +1653,30 @@ async function createAccount() {
   const icon = document.getElementById("register-icon").value;
 
   if (!name || !gameId || !password) {
-    alert("全部入力して");
+    alert("全部入力してください");
     return;
   }
 
   try {
-    // 🔥 メール生成
+    // メール生成
     const email = gameId + "@surechigai.app";
 
-    // 🔥 ユーザー作成
-    const userCredential = await createUserWithEmailAndPassword(
-      auth,
-      email,
-      password
-    );
-
+    // アカウント作成
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
 
-    // 🔥 Firestore保存（ここ重要）
+    // Firestore保存（←ここが重要）
     await setDoc(doc(db, "users", user.uid), {
       displayName: name,
       gameId: gameId,
       icon: icon
     });
 
-    // 🔥 チーム自動振り分け（既存関数）
-    await assignTeamAutomatically();
+    // チーム自動振り分け（←ここ追加！！）
+    await assignTeamAutomatically(user.uid);
 
     alert("アカウント作成成功！");
 
-    // モーダル閉じる（あれば）
     closeRegisterModal();
 
   } catch (error) {
@@ -1736,40 +1731,25 @@ async function saveAccountSetting() {
 
 }
 
-async function login(email, password) {
+async function login(username, password) {
   try {
-    // 🔐 Firebase Authでログイン
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    const fakeEmail = username + "@example.com";
+
+    const userCredential = await signInWithEmailAndPassword(
+      auth,
+      fakeEmail,
+      password
+    );
+
     const user = userCredential.user;
+
+    await assignTeamAutomatically(user.uid);
 
     console.log("ログイン成功:", user.uid);
 
-    // 👇 Firestoreのユーザー情報取得
-    const userRef = doc(db, "users", user.uid);
-    const userSnap = await getDoc(userRef);
-
-    if (!userSnap.exists()) {
-      console.error("ユーザーデータが存在しない");
-      return;
-    }
-
-    const userData = userSnap.data();
-
-    console.log("ユーザー情報:", userData);
-
-    // 👇 チーム確認
-    if (!userData.currentTeam) {
-      console.log("チーム未割当 → 自動割り当て");
-      await assignTeamAutomatically(user.uid);
-    } else {
-      console.log("所属チーム:", userData.currentTeam);
-    }
-
-    // 👇 画面遷移（例）
-    window.location.href = "game.html";
-
   } catch (error) {
     console.error("ログイン失敗:", error.message);
+    alert("ログインに失敗しました");
   }
 }
 
