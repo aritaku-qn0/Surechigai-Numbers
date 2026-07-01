@@ -1061,6 +1061,7 @@ main {
   <div class="header-profile">
     <span id="header-avatar">😀</span>
     <span id="header-name">ユーザー</span>
+    <span id="header-gameid" style="color:var(--muted);font-size:0.8rem;margin-left:4px"></span>
   </div>
 
   <div class="header-stats">
@@ -1855,6 +1856,8 @@ async function updateCredentials() {
     }
 
     alert("更新しました！");
+
+    updateAccountUI(window.auth.currentUser);
 
     document.getElementById("account-new-gameid").value = "";
     document.getElementById("account-new-password").value = "";
@@ -2714,12 +2717,11 @@ async function captureAndAnalyze() {
 
         collectedCounts[pref.id] = (collectedCounts[pref.id] || 0) + 1;
         const count = collectedCounts[pref.id];
-        const areaPart = parsed.plate_area ? `「${parsed.plate_area}」` : '';
         const suffix = count === 1 ? '(New)' : `(${count}回目)`;
-        const logText = `${pref.name}${areaPart}のナンバーをゲット ${suffix}`;
+        const logText = `${pref.name}のナンバー(${plateNumber})をゲット ${suffix}`;
 
         if(collected.has(pref.id)){
-          showResult('already',`${pref.name}${areaPart}のナンバーをゲット ${suffix}`);
+          showResult('already',logText);
           addLog(logText, false);
           await saveState();
         } else {
@@ -2748,7 +2750,7 @@ async function captureAndAnalyze() {
           await saveState();
           markMapCollected(pref.id);
           updateUI();
-          showResult('success',`${pref.name}${areaPart}のナンバーをゲット ${suffix}`);
+          showResult('success',logText);
           showToast(`🎉 ${pref.name} を制覇！`, false);
           addLog(logText, true);
           checkMissions(prevMissions);
@@ -3298,6 +3300,12 @@ function updateAccountUI(user) {
     name.value = user.displayName || "";
   }
 
+  const gameIdEl = document.getElementById("header-gameid");
+  if (gameIdEl && user.email) {
+    const gameId = user.email.replace("@surechigai.app", "");
+    gameIdEl.textContent = `@${gameId}`;
+  }
+
 }
 
 function resetAccountUI() {
@@ -3306,6 +3314,11 @@ function resetAccountUI() {
 
   if (name) {
     name.value = "";
+  }
+
+  const gameIdEl = document.getElementById("header-gameid");
+  if (gameIdEl) {
+    gameIdEl.textContent = "";
   }
 
 }
