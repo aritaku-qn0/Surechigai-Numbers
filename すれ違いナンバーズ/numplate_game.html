@@ -3415,6 +3415,8 @@ window.addEventListener("load", () => {
       updateAccountUI(user);
       await loadUserData();
       await assignTeamAutomatically();
+      loadTeamCounts();
+      listenTerritories();
       updateUI();
 
       // 管理者だけ開発メニュー表示（Firestoreのusers/{uid}.isAdminで判定）
