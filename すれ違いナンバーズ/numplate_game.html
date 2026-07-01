@@ -1910,10 +1910,29 @@ async function deleteAccount() {
 
     // Firestore側のユーザーデータも削除
     // （認証が切れる前に、Authユーザー削除より先に行う）
+    const userSnap = await window.getDoc(window.doc(window.db, "users", user.uid));
+    const myTeam = userSnap.exists() ? userSnap.data().currentTeam : null;
+
+    if (myTeam) {
+      const teamRef = window.doc(window.db, "system", "teamCounts");
+      await window.runTransaction(window.db, async (transaction) => {
+        const snap = await transaction.get(teamRef);
+        if (snap.exists()) {
+          const current = snap.data()[myTeam] || 0;
+          transaction.update(teamRef, {
+            [myTeam]: Math.max(0, current - 1)
+          });
+        }
+      });
+    }
+
     await window.deleteDoc(window.doc(window.db, "users", user.uid));
 
     // アカウント削除
     await deleteUser(user);
+
+    document.getElementById("delete-account-modal").classList.remove("show");
+    document.getElementById("account-modal").classList.remove("show");
 
     alert("アカウント削除しました");
 
@@ -2537,61 +2556,64 @@ async function reshuffleAllTeams() {
   }
 }
 
-async function assignTeamAutomatically() {
+async function assignTeamAutomatically(targetUid) {
 
-  const user = currentUser();
-  if (!user) return;
+  const myUid = currentUser()?.uid;
+  const uid = targetUid || myUid;
+  if (!uid) return;
 
-  const userRef = window.doc(window.db, "users", user.uid);
+  const isSelf = uid === myUid;
+
+  const userRef = window.doc(window.db, "users", uid);
   const userSnap = await window.getDoc(userRef);
 
   // すでに所属している場合
   if (userSnap.exists() && userSnap.data().currentTeam) {
 
-    currentTeam = userSnap.data().currentTeam;
-    renderMyTeam();
+    if (isSelf) {
+      currentTeam = userSnap.data().currentTeam;
+      renderMyTeam();
+    }
     return;
 
   }
 
   const teamRef = window.doc(window.db, "system", "teamCounts");
+  let chosenTeam = null;
 
   await window.runTransaction(window.db, async (transaction) => {
 
     const snap = await transaction.get(teamRef);
-
-    console.log(snap.exists());
-    console.log(snap.data());
 
     const data = snap.data();
 
     console.log("teamCounts", data);
 
     const teams = [
-    { id: "a", count: data.a },
-    { id: "b", count: data.b },
-    { id: "c", count: data.c },
-    { id: "d", count: data.d }
-  ];
-  // 最少人数を調べる
-  const minCount = Math.min(...teams.map(t => t.count));
-  // 最少人数のチームだけ取り出す
-  const candidates = teams.filter(t => t.count === minCount);
-  // その中からランダムに1チーム選ぶ
-  const randomIndex = Math.floor(Math.random() * candidates.length);
-  
-  currentTeam = candidates[randomIndex].id;
+      { id: "a", count: data.a },
+      { id: "b", count: data.b },
+      { id: "c", count: data.c },
+      { id: "d", count: data.d }
+    ];
+    // 最少人数を調べる
+    const minCount = Math.min(...teams.map(t => t.count));
+    // 最少人数のチームだけ取り出す
+    const candidates = teams.filter(t => t.count === minCount);
+    // その中からランダムに1チーム選ぶ
+    const randomIndex = Math.floor(Math.random() * candidates.length);
+
+    chosenTeam = candidates[randomIndex].id;
 
     transaction.update(teamRef, {
-      [currentTeam]: data[currentTeam] + 1
+      [chosenTeam]: data[chosenTeam] + 1
     });
 
-    console.log("更新するチーム", currentTeam);
+    console.log("更新するチーム", chosenTeam);
 
     transaction.set(
       userRef,
       {
-        currentTeam
+        currentTeam: chosenTeam
       },
       {
         merge: true
@@ -2600,7 +2622,12 @@ async function assignTeamAutomatically() {
 
   });
 
-  renderMyTeam();
+  if (isSelf) {
+    currentTeam = chosenTeam;
+    renderMyTeam();
+  }
+
+  return chosenTeam;
 
 }
 
