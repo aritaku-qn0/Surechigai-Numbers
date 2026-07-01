@@ -1702,6 +1702,23 @@ async function createAccount() {
     return;
   }
 
+  const idPasswordPattern = /^[a-zA-Z0-9_-]+$/;
+
+  if (!idPasswordPattern.test(gameId)) {
+    alert("ゲームIDは半角英数字（と - _ ）のみ使用できます");
+    return;
+  }
+
+  if (!idPasswordPattern.test(password)) {
+    alert("パスワードは半角英数字（と - _ ）のみ使用できます");
+    return;
+  }
+
+  if (password.length < 6) {
+    alert("パスワードは6文字以上にしてください");
+    return;
+  }
+
   try {
     // メール生成
     const email = gameId + "@surechigai.app";
@@ -1796,6 +1813,23 @@ async function updateCredentials() {
 
   if (!currentPassword) {
     alert("確認のため、現在のパスワードを入力してください");
+    return;
+  }
+
+  const idPasswordPattern = /^[a-zA-Z0-9_-]+$/;
+
+  if (newGameId && !idPasswordPattern.test(newGameId)) {
+    alert("ゲームIDは半角英数字（と - _ ）のみ使用できます");
+    return;
+  }
+
+  if (newPassword && !idPasswordPattern.test(newPassword)) {
+    alert("パスワードは半角英数字（と - _ ）のみ使用できます");
+    return;
+  }
+
+  if (newPassword && newPassword.length < 6) {
+    alert("パスワードは6文字以上にしてください");
     return;
   }
 
@@ -2539,21 +2573,32 @@ async function initializeTerritories() {
 }
 
 async function reshuffleAllTeams() {
-  const usersSnapshot = await getDocs(collection(db, "users"));
 
-  // 一旦リセット
-  await setDoc(doc(db, "system", "teamCounts"), {
-    a: 0,
-    b: 0,
-    c: 0,
-    d: 0
-  });
+  try {
 
-  for (const userDoc of usersSnapshot.docs) {
-    const uid = userDoc.id;
+    const usersSnapshot = await window.getDocs(window.collection(window.db, "users"));
 
-    const team = await assignTeamAutomatically(uid);
+    const counts = { a: 0, b: 0, c: 0, d: 0 };
+
+    usersSnapshot.forEach((userDoc) => {
+      const team = userDoc.data().currentTeam;
+      if (team && counts.hasOwnProperty(team)) {
+        counts[team]++;
+      }
+    });
+
+    await window.setDoc(window.doc(window.db, "system", "teamCounts"), counts);
+
+    alert(
+      `再集計しました！（対象: ${usersSnapshot.size}人）\n` +
+      `A:${counts.a} B:${counts.b} C:${counts.c} D:${counts.d}`
+    );
+
+  } catch (error) {
+    console.error(error);
+    alert("再集計に失敗しました: " + error.message);
   }
+
 }
 
 async function assignTeamAutomatically(targetUid) {
@@ -3451,7 +3496,7 @@ border-radius:10px;
 
 <button onclick="initializeTerritories()">territories初期化</button><br><br>
 
-<button onclick="reshuffleAllTeams()">全ユーザー再抽選</button>
+<button onclick="reshuffleAllTeams()">チーム人数を再集計</button>
 
 </details>
 
