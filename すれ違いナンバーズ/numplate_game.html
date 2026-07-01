@@ -3248,6 +3248,16 @@ function saveAccount(){
     .classList.remove('show');
 }
 
+function showGameScreen() {
+  document.getElementById("login-screen").style.display = "none";
+  document.getElementById("game-screen").style.display = "block";
+}
+
+function showLoginScreen() {
+  document.getElementById("login-screen").style.display = "block";
+  document.getElementById("game-screen").style.display = "none";
+}
+
 document.getElementById('account-modal').addEventListener('click', function(e){
 
   if(e.target === this){
@@ -3277,10 +3287,11 @@ updateUI();
 window.addEventListener("load", () => {
 
   const ADMIN_UID = "HHPzWeP60IWZppqHnKGpb9Eft7W2";
-
+  
   window.onAuthStateChanged(window.auth, async (user) => {
     if (user) {
-      console.log("UID:", user.uid);
+      console.log("ログイン中:", user.uid);
+      showGameScreen(); 
       updateAccountUI(user);
       await loadUserData();
       await assignTeamAutomatically();
@@ -3288,10 +3299,14 @@ window.addEventListener("load", () => {
 
       // 管理者だけ開発メニュー表示
       if (user.uid === ADMIN_UID) {
-          document.getElementById("dev-menu").style.display = "block";
+        document.getElementById("dev-menu").style.display = "block";
       }
 
     } else {
+      console.log("未ログイン");
+
+      showLoginScreen(); // 🔥 追加（超重要）
+
       resetAccountUI();
       document.getElementById("dev-menu").style.display = "none";
     }
