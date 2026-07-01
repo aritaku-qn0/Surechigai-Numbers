@@ -1908,6 +1908,10 @@ async function deleteAccount() {
     const credential = EmailAuthProvider.credential(email, password);
     await reauthenticateWithCredential(user, credential);
 
+    // Firestore側のユーザーデータも削除
+    // （認証が切れる前に、Authユーザー削除より先に行う）
+    await window.deleteDoc(window.doc(window.db, "users", user.uid));
+
     // アカウント削除
     await deleteUser(user);
 
