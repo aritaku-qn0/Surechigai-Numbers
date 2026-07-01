@@ -1612,6 +1612,7 @@ let neighborMissions = [];
 // ===== STATE =====
 let collected = new Set();
 let logEntries = [];
+let collectedCounts = {};
 let bingoCard = null;
 let bingoMarked = new Set(["FREE"]);
 let territoryCounts = {};
@@ -2024,6 +2025,7 @@ async function saveState() {
       {
 
         collected: [...collected],
+        collectedCounts,
         logEntries,
         bingoCard,
         bingoMarked: [...bingoMarked],
@@ -2069,6 +2071,7 @@ async function loadUserData() {
     data = snap.data();
 
     collected = new Set(data.collected || []);
+    collectedCounts = data.collectedCounts || {};
     logEntries = data.logEntries || [];
     bingoCard = data.bingoCard || createBingoCard();
     bingoMarked = new Set(data.bingoMarked || ["FREE"]);
@@ -2104,6 +2107,7 @@ async function loadUserData() {
 function resetGameData() {
 
     collected = new Set();
+    collectedCounts = {};
     logEntries = [];
     bingoCard = createBingoCard();
     bingoMarked = new Set(["FREE"]);
@@ -2704,13 +2708,20 @@ async function captureAndAnalyze() {
     if(parsed&&parsed.found&&parsed.prefecture&&parsed.plate_number){
       const pref=PREFS.find(p=>p.name===parsed.prefecture||parsed.prefecture.includes(p.name));
       if(pref){
-        const areaLabel = parsed.plate_area ? `「${parsed.plate_area}」ナンバー` : pref.name;
         const plateNumber = parsed.plate_number;
         markBingoFromPlate(plateNumber);
         addTerritoryPoint(pref.id, currentTeam);
+
+        collectedCounts[pref.id] = (collectedCounts[pref.id] || 0) + 1;
+        const count = collectedCounts[pref.id];
+        const areaPart = parsed.plate_area ? `「${parsed.plate_area}」` : '';
+        const suffix = count === 1 ? '(New)' : `(${count}回目)`;
+        const logText = `${pref.name}${areaPart}のナンバーをゲット ${suffix}`;
+
         if(collected.has(pref.id)){
-          showResult('already',`このナンバーは登録済み！`);
-          addLog(`ナンバーが重複`, false);
+          showResult('already',`${pref.name}${areaPart}のナンバーをゲット ${suffix}`);
+          addLog(logText, false);
+          await saveState();
         } else {
           const prevMissions = completedMissionCount();
           collected.add(pref.id);
@@ -2737,9 +2748,9 @@ async function captureAndAnalyze() {
           await saveState();
           markMapCollected(pref.id);
           updateUI();
-          showResult('success',`${areaLabel}（${pref.name}）をゲット！`);
+          showResult('success',`${pref.name}${areaPart}のナンバーをゲット ${suffix}`);
           showToast(`🎉 ${pref.name} を制覇！`, false);
-          addLog(`${pref.name} を発見! ナンバー:${plateNumber}`, true);
+          addLog(logText, true);
           checkMissions(prevMissions);
         }
       } else {
